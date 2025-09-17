@@ -6,8 +6,9 @@
     "getTokens": "ts-node 1click-example/1-get-tokens.ts",
     "getQuote": "ts-node 1click-example/2-get-quote.ts",
     "sendDeposit": "ts-node 1click-example/3-send-deposit.ts",
-    "checkStatus": "ts-node 1click-example/4-check-status.ts",
-    "fullSwap": "ts-node 1click-example/5-full-swap.ts"
+    "submitTxHash": "ts-node 1click-example/4-submit-tx-hash.ts",
+    "checkStatus": "ts-node 1click-example/5-check-status.ts",
+    "fullSwap": "ts-node 1click-example/6-full-swap.ts"
   },
   "dependencies": {
     "@defuse-protocol/one-click-sdk-typescript": "0.1.1",

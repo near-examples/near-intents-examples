@@ -1,7 +1,8 @@
 import { ApiError } from '@defuse-protocol/one-click-sdk-typescript';
 import { getQuote } from './2-get-quote';
 import { sendTokens } from './3-send-deposit';
-import { pollStatusUntilSuccess } from './4-check-status';
+import { submitTxHash } from './4-submit-tx-hash';
+import { pollStatusUntilSuccess } from './5-check-status';
 import { displaySwapCostTable } from './utils';
 import { NEAR } from '@near-js/tokens';
 import "dotenv/config";
@@ -9,10 +10,11 @@ import "dotenv/config";
 /**
  *  Step 5: Full Swap Implementation
  *
- *  This combines steps 2, 3, and 4:
+ *  This combines steps 2 - 5:
  *   1. Get a quote with deposit address
  *   2. Send deposit to the quote's deposit address
- *   3. Check the status of the swap
+ *   3. Submit transaction hash to 1-Click API
+ *   4. Check the status of the swap
  * 
  *  NOTE: Configure this file independently of the other files in this directory
  */
@@ -53,10 +55,16 @@ async function fullSwap() {
     console.log("--------------------------------");
     const depositResult = await sendTokens(senderAddress, senderPrivateKey, depositAddress, amount);
     console.log("✅ - Deposit sent successfully!");
-    console.log(`🔍 - See transaction: https://nearblocks.io/txns/${depositResult.transaction.hash}\n\n`);
+    console.log(`🔍 - See transaction: https://nearblocks.io/txns/${depositResult.transaction.hash}\n`);
     
-    // Step 3: Poll status until success
-    console.log("Step 3: Monitoring swap status...");
+    // Step 3: Submit transaction hash
+    console.log("Step 3: Submitting transaction hash...");
+    console.log("--------------------------------");
+    const submitResult = await submitTxHash(depositResult.transaction.hash, depositAddress);
+    console.log("✅ - Transaction hash submitted successfully!\n");
+    
+    // Step 4: Poll status until success
+    console.log("Step 4: Monitoring swap status...");
     console.log("--------------------------------");
     console.log("⏳ Waiting 5 seconds before starting status checks...");
     await new Promise(resolve => setTimeout(resolve, 5000));
@@ -66,7 +74,7 @@ async function fullSwap() {
     console.log("✅ Full swap process completed! \n\n");
     console.log(`🔍 View full transaction on NEAR Intents Explorer: \n https://explorer.near-intents.org/transactions/${depositAddress} \n`);
     
-    return { quote, depositAddress, depositResult, finalStatus };
+    return { quote, depositAddress, depositResult, submitResult, finalStatus };
     
   } catch (error) {
     console.error("❌ Full swap failed:", error as ApiError);
