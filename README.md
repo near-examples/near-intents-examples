@@ -15,7 +15,8 @@ A comprehensive tutorial demonstrating cross-chain token swaps with [**NEAR Inte
 - [Node.js >=16](https://nodejs.org/en)
 - [TypeScript](https://www.typescriptlang.org/)
 - NEAR account with sufficient balance (~0.05 $NEAR)
-- 1-Click SDK JWT token -> [Request here](https://docs.google.com/forms/d/e/1FAIpQLSdrSrqSkKOMb_a8XhwF0f7N5xZ0Y5CYgyzxiAuoC2g4a2N68g/viewform)
+- 1-Click SDK JWT token -> [Request here](https://docs.google.com/forms/d/e/1FAIpQLSdrSrqSkKOMb_a8XhwF0f7N5xZ0Y5CYgyzxiAuoC2g4a2N68g/viewform) _(Optional)_
+  - _(Although a JWT is not required, not using one will incur 0.1% fee on all swaps)_
 
 ## Setup
 

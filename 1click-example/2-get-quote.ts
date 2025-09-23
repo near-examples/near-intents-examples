@@ -24,6 +24,7 @@ OpenAPI.BASE = 'https://1click.chaindefuser.com';
 
 // Configure your JSON Web Token (JWT) required for most endpoints
 // Request one here -> https://docs.google.com/forms/d/e/1FAIpQLSdrSrqSkKOMb_a8XhwF0f7N5xZ0Y5CYgyzxiAuoC2g4a2N68g/viewform
+// If you don't have a JWT, you can comment out line 18 but you will pay a 0.1% fee on all swaps
 OpenAPI.TOKEN = process.env.ONE_CLICK_JWT;
 
 export async function getQuote(dry: boolean, senderAddress: string, recipientAddress: string, originAsset: string, destinationAsset: string, amount: string) {
