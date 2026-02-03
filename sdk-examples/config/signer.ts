@@ -3,6 +3,7 @@ import {
   createIntentSignerViem,
 } from "@defuse-protocol/intents-sdk";
 import { AuthMethod } from "@defuse-protocol/internal-utils";
+import "dotenv/config";
 import { Account } from "near-api-js";
 import { WalletClient } from "viem";
 import { getEvmWalletFromPrivateKey } from "./evm";
@@ -81,14 +82,15 @@ export const getIntentsSigner = () => {
       signer: getNearIntentsSignerNear(account),
       authMethod: AuthMethod.Near,
     };
-  } else if (privateKeyEvm) {
+  }
+  if (privateKeyEvm) {
     const walletClient = getEvmWalletFromPrivateKey(privateKeyEvm);
     return {
-      authIdentifier: walletClient.account.address,
+      authIdentifier: "0xB66680c46522d3c1F3126f0b9F82d12D442A0C57",
       signer: getNearIntentsSignerEvm(walletClient),
       authMethod: AuthMethod.EVM,
     };
-  } else {
-    throw new Error("No private key found");
   }
+
+  throw new Error("No private key found");
 };

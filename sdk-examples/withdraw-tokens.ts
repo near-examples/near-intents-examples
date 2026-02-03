@@ -1,4 +1,5 @@
 import { WithdrawalParams } from "@defuse-protocol/intents-sdk";
+import { parseUnits } from "viem";
 import { intentsSdk } from "./config/sdk";
 import { getTokenById, Token } from "./get-tokens-list";
 
@@ -61,10 +62,16 @@ async function main() {
   const destinationAddress = process.argv[4] as string;
   const destinationMemo = process.argv[5] as string;
   const withdrawalQuoteOnly = process.argv.includes("--quote-only");
+  if (!amount || !destinationAddress) {
+    throw new Error(
+      "Usage: withdraw-tokens <tokenId> <amount> <destinationAddress> [destinationMemo] [--quote-only]"
+    );
+  }
   console.log("Preparing withdrawal...");
   console.log(`Token: ${token.intents_token_id}`);
-  console.log(`Amount: ${amount}`);
+  console.log(`Amount (human): ${amount}`);
   console.log(`Destination: ${destinationAddress}`);
+  const amountIn = parseUnits(amount, token.decimals).toString();
   const withdrawalQuote = await getWithdrawalQuote({
     fromToken: token,
     amount: amount,
@@ -80,7 +87,7 @@ async function main() {
   const intentTx = await submitWithdrawal({
     withdrawalParams: {
       assetId: token.intents_token_id,
-      amount: BigInt(amount),
+      amount: BigInt(amountIn),
       destinationAddress: destinationAddress,
       feeInclusive: true,
       destinationMemo: destinationMemo,

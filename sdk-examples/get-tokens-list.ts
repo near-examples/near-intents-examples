@@ -34,6 +34,7 @@ async function main() {
   console.log(`Found ${tokens.length} tokens:\n`);
   console.table(
     tokens.map((token) => ({
+      assetName: token.asset_name,
       intentsTokenId: token.intents_token_id,
       decimals: token.decimals,
     }))

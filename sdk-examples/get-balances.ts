@@ -72,7 +72,7 @@ export const getTokenBalances = async ({
         token.decimals
       ),
     }));
-    return result;
+    return result.filter((token) => token.balance !== "0");
   } catch (error) {
     return [];
   }
@@ -89,8 +89,10 @@ const main = async () => {
   console.log(`Found ${balances.length} token balances:\n`);
   console.table(
     balances.map((token) => ({
+      assetName: token.asset_name,
       intentsTokenId: token.intents_token_id,
-      balance: token.balanceFormatted,
+      balance: token.balance,
+      balanceFormatted: token.balanceFormatted,
     }))
   );
 };

@@ -3,6 +3,7 @@ import {
   IIntentSigner,
   RouteEnum,
 } from "@defuse-protocol/intents-sdk";
+import { parseUnits } from "viem";
 import { intentsSdk } from "./config/sdk";
 import { getIntentsSigner } from "./config/signer";
 import { getTokenById, Token } from "./get-tokens-list";
@@ -65,17 +66,21 @@ async function main() {
   }
   const amount = process.argv[3] as string;
   const toAddress = process.argv[4] as string;
+  if (!amount || !toAddress) {
+    throw new Error("Usage: transfer-tokens <tokenId> <amount> <toAddress>");
+  }
   console.log("Preparing internal transfer...");
   console.log(`Token: ${token.intents_token_id}`);
-  console.log(`Amount: ${amount}`);
+  console.log(`Amount (human): ${amount}`);
   console.log(`To: ${toAddress}`);
+  const amountIn = parseUnits(amount, token.decimals).toString();
   const { signer } = getIntentsSigner();
   if (!signer) {
     throw new Error("Signer not found");
   }
   const txHash = await transferToken({
     token: token,
-    amount: amount,
+    amount: amountIn,
     toAddress: toAddress,
     signer: signer,
   });

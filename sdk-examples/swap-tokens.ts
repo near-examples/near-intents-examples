@@ -1,4 +1,5 @@
 import { IIntentSigner } from "@defuse-protocol/intents-sdk";
+import { parseUnits } from "viem";
 import { solverRelay } from "@defuse-protocol/internal-utils";
 import { intentsSdk } from "./config/sdk";
 import { getIntentsSigner } from "./config/signer";
@@ -73,12 +74,17 @@ export const submitSwap = async ({
 async function main() {
   const fromTokenId = process.argv[2] as string;
   const toTokenId = process.argv[3] as string;
-  const amountIn = process.argv[4] as string;
+  const amount = process.argv[4] as string;
   const quoteOnly = process.argv.includes("--quote-only");
+  if (!fromTokenId || !toTokenId || !amount) {
+    throw new Error(
+      "Usage: swap-tokens <fromTokenId> <toTokenId> <amount> [--quote-only]"
+    );
+  }
   console.log("Requesting swap quote...");
   console.log(`From: ${fromTokenId}`);
   console.log(`To: ${toTokenId}`);
-  console.log(`Amount in: ${amountIn}`);
+  console.log(`Amount in: ${amount}`);
   const fromToken = await getTokenById({
     intents_token_id: fromTokenId,
   });
@@ -91,6 +97,7 @@ async function main() {
   if (!toToken) {
     throw new Error("Token not found");
   }
+  const amountIn = parseUnits(amount, fromToken.decimals).toString();
   const quote = await getSwapQuote({
     originAsset: fromToken,
     destinationAsset: toToken,

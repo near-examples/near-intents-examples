@@ -31,10 +31,18 @@ export async function getDepositAddress({
       authMethod
     );
 
+    // Defuse asset identifier is in the format of blockchain:type
+    const [blockchain, type] = token.defuse_asset_identifier.split(":");
+
+    // If the token is a Stellar token, use the MEMO deposit mode, otherwise use the SIMPLE deposit mode
+    const depositMode = token.defuse_asset_identifier.includes("stellar")
+      ? "MEMO"
+      : "SIMPLE";
+
     const quoteResponse = await poaBridge.httpClient.getDepositAddress({
       account_id,
-      chain: token.near_token_id,
-      deposit_mode: token.near_token_id.includes("stellar") ? "MEMO" : "SIMPLE",
+      chain: `${blockchain}:${type}`,
+      deposit_mode: depositMode,
     });
 
     if (!quoteResponse.address) {
@@ -56,9 +64,13 @@ export async function getDepositAddress({
 async function main() {
   const { authIdentifier, authMethod } = getIntentsSigner();
   console.log("Fetching deposit address...");
+  if (!process.argv[2]) {
+    throw new Error("Usage: get-deposit-address <tokenId>");
+  }
   const token = await getTokenById({
     intents_token_id: process.argv[2] as string,
   });
+  console.log("Token:", token);
   if (!token) {
     throw new Error("Token not found");
   }
