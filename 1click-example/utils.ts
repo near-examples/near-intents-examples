@@ -1,7 +1,12 @@
-import { TokenResponse, QuoteResponse } from '@defuse-protocol/one-click-sdk-typescript';
+import {
+  QuoteResponse,
+  TokenResponse,
+} from "@defuse-protocol/one-click-sdk-typescript";
 
 // Groups tokens by blockchain
-export function groupTokensByBlockchain(tokens: TokenResponse[]): Record<string, TokenResponse[]> {
+export function groupTokensByBlockchain(
+  tokens: TokenResponse[]
+): Record<string, TokenResponse[]> {
   return tokens.reduce((acc, token) => {
     if (!acc[token.blockchain]) {
       acc[token.blockchain] = [];
@@ -26,8 +31,8 @@ export function displayTokensByBlockchain(tokens: TokenResponse[]): void {
     console.table(
       sortedTokens.map((token) => ({
         Symbol: token.symbol,
-        Price: token.price || 'N/A',
-        'Asset ID': token.assetId || 'N/A',
+        Price: token.price || "N/A",
+        "Asset ID": token.assetId || "N/A",
       }))
     );
   });
@@ -37,7 +42,7 @@ export function displaySwapCostTable(quote: QuoteResponse) {
   const amountInUsd = Number(quote.quote?.amountInUsd) || 0;
   const amountOutUsd = Number(quote.quote?.amountOutUsd) || 0;
   const swapCost = (amountInUsd - amountOutUsd).toFixed(4);
-  
+
   console.log(`
 ┌─────────────────────┬──────────────┐
 │ Swap Cost Breakdown │ USD Value    │
@@ -49,4 +54,3 @@ export function displaySwapCostTable(quote: QuoteResponse) {
 └─────────────────────┴──────────────┘
 `);
 }
-
