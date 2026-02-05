@@ -8,7 +8,10 @@
     "sendDeposit": "ts-node 1click-example/3-send-deposit.ts",
     "submitTxHash": "ts-node 1click-example/4-submit-tx-hash.ts",
     "checkStatus": "ts-node 1click-example/5-check-status.ts",
-    "fullSwap": "ts-node 1click-example/6-full-swap.ts"
+    "fullSwap": "ts-node 1click-example/6-full-swap.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write '**/*.{ts,json,md}'"
   },
   "dependencies": {
     "@defuse-protocol/one-click-sdk-typescript": "0.1.1",
@@ -20,8 +23,16 @@
     "dotenv": "^17.2.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.2",
+    "typescript-eslint": "^8.54.0"
   }
 }
