@@ -2,11 +2,11 @@ import {
   createInternalTransferRoute,
   IIntentSigner,
   RouteEnum,
-} from "@defuse-protocol/intents-sdk";
-import { parseUnits } from "viem";
-import { intentsSdk } from "./config/sdk";
-import { getIntentsSigner } from "./config/signer";
-import { getTokenById, Token } from "./get-tokens-list";
+} from '@defuse-protocol/intents-sdk';
+import { parseUnits } from 'viem';
+import { intentsSdk } from './config/sdk';
+import { getIntentsSigner } from './config/signer';
+import { getTokenById, Token } from './get-tokens-list';
 
 /*
  * Example: internal transfer between intents accounts.
@@ -62,21 +62,21 @@ async function main() {
     intents_token_id: process.argv[2] as string,
   });
   if (!token) {
-    throw new Error("Token not found");
+    throw new Error('Token not found');
   }
   const amount = process.argv[3] as string;
   const toAddress = process.argv[4] as string;
   if (!amount || !toAddress) {
-    throw new Error("Usage: transfer-tokens <tokenId> <amount> <toAddress>");
+    throw new Error('Usage: transfer-tokens <tokenId> <amount> <toAddress>');
   }
-  console.log("Preparing internal transfer...");
+  console.log('Preparing internal transfer...');
   console.log(`Token: ${token.intents_token_id}`);
   console.log(`Amount (human): ${amount}`);
   console.log(`To: ${toAddress}`);
   const amountIn = parseUnits(amount, token.decimals).toString();
   const { signer } = getIntentsSigner();
   if (!signer) {
-    throw new Error("Signer not found");
+    throw new Error('Signer not found');
   }
   const txHash = await transferToken({
     token: token,
@@ -84,7 +84,7 @@ async function main() {
     toAddress: toAddress,
     signer: signer,
   });
-  console.log("Transfer submitted:");
+  console.log('Transfer submitted:');
   console.log(JSON.stringify(txHash, null, 2));
 }
 

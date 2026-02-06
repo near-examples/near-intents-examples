@@ -1,7 +1,7 @@
-import { WithdrawalParams } from "@defuse-protocol/intents-sdk";
-import { parseUnits } from "viem";
-import { intentsSdk } from "./config/sdk";
-import { getTokenById, Token } from "./get-tokens-list";
+import { WithdrawalParams } from '@defuse-protocol/intents-sdk';
+import { parseUnits } from 'viem';
+import { intentsSdk } from './config/sdk';
+import { getTokenById, Token } from './get-tokens-list';
 
 /*
  * Example: estimate a withdrawal fee and submit a withdrawal.
@@ -56,18 +56,18 @@ async function main() {
     intents_token_id: process.argv[2] as string,
   });
   if (!token) {
-    throw new Error("Token not found");
+    throw new Error('Token not found');
   }
   const amount = process.argv[3] as string;
   const destinationAddress = process.argv[4] as string;
   const destinationMemo = process.argv[5] as string;
-  const withdrawalQuoteOnly = process.argv.includes("--quote-only");
+  const withdrawalQuoteOnly = process.argv.includes('--quote-only');
   if (!amount || !destinationAddress) {
     throw new Error(
-      "Usage: withdraw-tokens <tokenId> <amount> <destinationAddress> [destinationMemo] [--quote-only]"
+      'Usage: withdraw-tokens <tokenId> <amount> <destinationAddress> [destinationMemo] [--quote-only]',
     );
   }
-  console.log("Preparing withdrawal...");
+  console.log('Preparing withdrawal...');
   console.log(`Token: ${token.intents_token_id}`);
   console.log(`Amount (human): ${amount}`);
   console.log(`Destination: ${destinationAddress}`);
@@ -79,7 +79,7 @@ async function main() {
     destinationMemo: destinationMemo,
   });
   if (withdrawalQuoteOnly) {
-    console.log("\nWithdrawal fee quote:");
+    console.log('\nWithdrawal fee quote:');
     console.log(JSON.stringify(withdrawalQuote, null, 2));
     return;
   }
@@ -93,7 +93,7 @@ async function main() {
       destinationMemo: destinationMemo,
     },
   });
-  console.log("\nWithdrawal submitted. Settlement result:");
+  console.log('\nWithdrawal submitted. Settlement result:');
   console.log(JSON.stringify(intentTx, null, 2));
 }
 

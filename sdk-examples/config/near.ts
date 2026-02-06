@@ -4,14 +4,14 @@ import {
   KeyPair,
   KeyPairSigner,
   Provider,
-} from "near-api-js";
+} from 'near-api-js';
 
 /*
  * NEAR RPC configuration and account helpers.
  */
 
 export const nearJsonRpcProvider = new JsonRpcProvider({
-  url: "https://rpc.mainnet.fastnear.com",
+  url: 'https://rpc.mainnet.fastnear.com',
 });
 
 /**
@@ -20,7 +20,7 @@ export const nearJsonRpcProvider = new JsonRpcProvider({
 export const getNearWalletFromKeyPair = (privateKey: string): Account => {
   const keyPair = KeyPair.fromString(privateKey as `ed25519:${string}`);
   const signer = new KeyPairSigner(keyPair);
-  const address = Buffer.from(keyPair.getPublicKey().data).toString("hex");
+  const address = Buffer.from(keyPair.getPublicKey().data).toString('hex');
   const account = new Account(address, nearJsonRpcProvider as Provider, signer);
   return account;
 };

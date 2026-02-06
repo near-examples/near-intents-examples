@@ -1,6 +1,6 @@
-import { BlockId, BlockReference, Finality } from "near-api-js";
-import { z } from "zod";
-import { nearJsonRpcProvider } from "./config/near";
+import { BlockId, Finality } from 'near-api-js';
+import { z } from 'zod';
+import { nearJsonRpcProvider } from './config/near';
 
 /*
  * Shared helpers for NEAR view calls and response decoding.
@@ -11,7 +11,7 @@ import { nearJsonRpcProvider } from "./config/near";
  */
 export function decodeQueryResult<T>(
   response: unknown,
-  schema: z.ZodType<T>
+  schema: z.ZodType<T>,
 ): T {
   const parsed = z.object({ result: z.array(z.number()) }).parse(response);
   const uint8Array = new Uint8Array(parsed.result);
@@ -29,24 +29,6 @@ export type OptionalBlockReference = {
 };
 
 /**
- * Build a block reference for RPC queries, defaulting to optimistic finality.
- */
-function getBlockReference({
-  blockId,
-  finality,
-}: OptionalBlockReference): BlockReference {
-  if (blockId != null) {
-    return { blockId };
-  }
-
-  if (finality != null) {
-    return { finality };
-  }
-
-  return { finality: "optimistic" };
-}
-
-/**
  * Query a NEAR contract view method and return the decoded result.
  */
 export const queryContract = async ({
@@ -59,11 +41,11 @@ export const queryContract = async ({
   args: Record<string, unknown>;
 }): Promise<unknown> => {
   const response = await nearJsonRpcProvider.query({
-    request_type: "call_function",
+    request_type: 'call_function',
     account_id: contractId,
     args_base64: btoa(JSON.stringify(args)),
     method_name: methodName,
-    finality: "final",
+    finality: 'final',
   });
 
   return decodeQueryResult(response, z.unknown());

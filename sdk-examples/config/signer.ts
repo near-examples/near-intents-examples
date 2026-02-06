@@ -1,13 +1,13 @@
 import {
   createIntentSignerNEP413,
   createIntentSignerViem,
-} from "@defuse-protocol/intents-sdk";
-import { AuthMethod } from "@defuse-protocol/internal-utils";
-import "dotenv/config";
-import { Account } from "near-api-js";
-import { WalletClient } from "viem";
-import { getEvmWalletFromPrivateKey } from "./evm";
-import { getNearWalletFromKeyPair } from "./near";
+} from '@defuse-protocol/intents-sdk';
+import { AuthMethod } from '@defuse-protocol/internal-utils';
+import 'dotenv/config';
+import { Account } from 'near-api-js';
+import { WalletClient } from 'viem';
+import { getEvmWalletFromPrivateKey } from './evm';
+import { getNearWalletFromKeyPair } from './near';
 
 /*
  * Signer factories for NEAR and EVM-based intents.
@@ -31,7 +31,7 @@ const getNearIntentsSignerNear = (account: Account) => {
     signMessage: async (nep413Payload) => {
       const nonceArray = Array.isArray(nep413Payload.nonce)
         ? new Uint8Array(nep413Payload.nonce)
-        : new Uint8Array(Buffer.from(nep413Payload.nonce as string, "base64"));
+        : new Uint8Array(Buffer.from(nep413Payload.nonce as string, 'base64'));
 
       const signedData = await account.signNep413Message({
         message: nep413Payload.message,
@@ -40,7 +40,7 @@ const getNearIntentsSignerNear = (account: Account) => {
       });
 
       if (!signedData) {
-        throw new Error("Failed to sign message");
+        throw new Error('Failed to sign message');
       }
 
       return {
@@ -56,14 +56,14 @@ const getNearIntentsSignerNear = (account: Account) => {
  */
 const getNearIntentsSignerEvm = (walletClient: WalletClient) => {
   if (!walletClient.account) {
-    throw new Error("Account is required");
+    throw new Error('Account is required');
   }
   return createIntentSignerViem({
     signer: {
       address: walletClient.account.address,
       signMessage(parameters) {
         if (!walletClient.account?.signMessage) {
-          throw new Error("Sign message is required");
+          throw new Error('Sign message is required');
         }
         return walletClient.account.signMessage(parameters);
       },
@@ -86,11 +86,11 @@ export const getIntentsSigner = () => {
   if (privateKeyEvm) {
     const walletClient = getEvmWalletFromPrivateKey(privateKeyEvm);
     return {
-      authIdentifier: "0xB66680c46522d3c1F3126f0b9F82d12D442A0C57",
+      authIdentifier: '0xB66680c46522d3c1F3126f0b9F82d12D442A0C57',
       signer: getNearIntentsSignerEvm(walletClient),
       authMethod: AuthMethod.EVM,
     };
   }
 
-  throw new Error("No private key found");
+  throw new Error('No private key found');
 };

@@ -1,9 +1,9 @@
-import { authIdentity, AuthMethod } from "@defuse-protocol/internal-utils";
-import { formatUnits } from "viem";
-import { z } from "zod";
-import { getIntentsSigner } from "./config/signer.js";
-import { getTokens } from "./get-tokens-list";
-import { queryContract } from "./utils";
+import { authIdentity, AuthMethod } from '@defuse-protocol/internal-utils';
+import { formatUnits } from 'viem';
+import { z } from 'zod';
+import { getIntentsSigner } from './config/signer.js';
+import { getTokens } from './get-tokens-list';
+import { queryContract } from './utils';
 
 /*
  * Example: read balances for all supported tokens for a given intents user.
@@ -21,8 +21,8 @@ export const batchBalanceOf = async ({
   tokenIds: string[];
 }): Promise<bigint[]> => {
   const data = await queryContract({
-    contractId: "intents.near",
-    methodName: "mt_batch_balance_of",
+    contractId: 'intents.near',
+    methodName: 'mt_batch_balance_of',
     args: {
       account_id: accountId,
       token_ids: tokenIds,
@@ -49,7 +49,7 @@ export const getTokenBalances = async ({
   try {
     const accountId = authIdentity.authHandleToIntentsUserId(
       authIdentifier,
-      authMethod
+      authMethod,
     );
     const supportedTokens = await getTokens();
 
@@ -59,20 +59,23 @@ export const getTokenBalances = async ({
       tokenIds,
     });
 
-    const amounts = amountsArray.reduce((acc, amount, index) => {
-      acc[tokenIds[index]] = amount;
-      return acc;
-    }, {} as Record<string, bigint>);
+    const amounts = amountsArray.reduce(
+      (acc, amount, index) => {
+        acc[tokenIds[index]] = amount;
+        return acc;
+      },
+      {} as Record<string, bigint>,
+    );
 
     const result = supportedTokens.map((token) => ({
       ...token,
       balance: String(amounts[token.near_token_id]),
       balanceFormatted: formatUnits(
         amounts[token.near_token_id],
-        token.decimals
+        token.decimals,
       ),
     }));
-    return result.filter((token) => token.balance !== "0");
+    return result.filter((token) => token.balance !== '0');
   } catch (error) {
     return [];
   }
@@ -80,7 +83,7 @@ export const getTokenBalances = async ({
 
 const main = async () => {
   const { authIdentifier, authMethod } = getIntentsSigner();
-  console.log("Fetching balances for intents user...");
+  console.log('Fetching balances for intents user...');
   console.log(`Auth identifier: ${authIdentifier}`);
   const balances = await getTokenBalances({
     authIdentifier,
@@ -93,7 +96,7 @@ const main = async () => {
       intentsTokenId: token.intents_token_id,
       balance: token.balance,
       balanceFormatted: token.balanceFormatted,
-    }))
+    })),
   );
 };
 

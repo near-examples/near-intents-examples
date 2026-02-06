@@ -1,4 +1,4 @@
-import { poaBridge } from "@defuse-protocol/internal-utils";
+import { poaBridge } from '@defuse-protocol/internal-utils';
 
 /*
  * Example: list tokens supported by the bridge/intents system.
@@ -9,7 +9,7 @@ import { poaBridge } from "@defuse-protocol/internal-utils";
  */
 export type Token = Awaited<
   ReturnType<typeof poaBridge.httpClient.getSupportedTokens>
->["tokens"][number];
+>['tokens'][number];
 
 /**
  * Fetch the current list of supported tokens across chains.
@@ -29,7 +29,7 @@ export const getTokenById = async ({
 };
 
 async function main() {
-  console.log("Fetching supported tokens...");
+  console.log('Fetching supported tokens...');
   const tokens = await getTokens();
   console.log(`Found ${tokens.length} tokens:\n`);
   console.table(
@@ -37,10 +37,10 @@ async function main() {
       assetName: token.asset_name,
       intentsTokenId: token.intents_token_id,
       decimals: token.decimals,
-    }))
+    })),
   );
   console.log(
-    `\nResponse format example:\n${JSON.stringify(tokens[0], null, 2)}\n`
+    `\nResponse format example:\n${JSON.stringify(tokens[0], null, 2)}\n`,
   );
 }
 

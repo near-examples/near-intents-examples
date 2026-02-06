@@ -1,5 +1,5 @@
-import { authIdentity, AuthMethod } from "@defuse-protocol/internal-utils";
-import { getIntentsSigner } from "./config/signer";
+import { authIdentity, AuthMethod } from '@defuse-protocol/internal-utils';
+import { getIntentsSigner } from './config/signer';
 
 /*
  * Example: derive the intents internal account ID from an auth handle.
@@ -17,14 +17,14 @@ export const getInternalAddress = async ({
 }) => {
   const accountId = authIdentity.authHandleToIntentsUserId(
     authIdentifier,
-    authMethod
+    authMethod,
   );
   return accountId;
 };
 
 async function main() {
   const { authIdentifier, authMethod } = getIntentsSigner();
-  console.log("Resolving intents internal address...");
+  console.log('Resolving intents internal address...');
   console.log(`Auth identifier: ${authIdentifier}`);
   const internalAddress = await getInternalAddress({
     authIdentifier,
