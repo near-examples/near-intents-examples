@@ -21,6 +21,7 @@ A comprehensive tutorial demonstrating cross-chain token swaps with [**NEAR Inte
 ## Setup
 
 1. **Clone and Install**
+
    ```bash
    git clone https://github.com/near-examples/near-intents-examples
    cd near-intents-examples
@@ -39,17 +40,17 @@ A comprehensive tutorial demonstrating cross-chain token swaps with [**NEAR Inte
 
 3. **Configure Swap**
 
-    Swap quotes can be configured and executed independently in both [2-get-quote.ts](./1click-example/2-get-quote.ts) & [5-full-swap.ts](./1click-example/5-full-swap.ts):
-   
-    ```js
-    // Example Swap Configuration
-    const isTest = true;  // set to true for quote estimation / testing, false for actual execution
-    const senderAddress = process.env.SENDER_NEAR_ACCOUNT as string;  // Configure in .env
-    const recipientAddress = '0x553e771500f2d7529079918F93d86C0a845B540b';  // Token swap recipient address on Arbitrum
-    const originAsset = "nep141:wrap.near";  // Native $NEAR
-    const destinationAsset = "nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near";  // Native $ARB
-    const amount = "100000000000000000000000";  // 0.1 $NEAR
-    ```
+   Swap quotes can be configured and executed independently in both [2-get-quote.ts](./1click-example/2-get-quote.ts) & [5-full-swap.ts](./1click-example/5-full-swap.ts):
+
+   ```js
+   // Example Swap Configuration
+   const isTest = true;  // set to true for quote estimation / testing, false for actual execution
+   const senderAddress = process.env.SENDER_NEAR_ACCOUNT as string;  // Configure in .env
+   const recipientAddress = '0x553e771500f2d7529079918F93d86C0a845B540b';  // Token swap recipient address on Arbitrum
+   const originAsset = "nep141:wrap.near";  // Native $NEAR
+   const destinationAsset = "nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near";  // Native $ARB
+   const amount = "100000000000000000000000";  // 0.1 $NEAR
+   ```
 
 ## 🎯 Swap Flow
 
@@ -60,14 +61,16 @@ A comprehensive tutorial demonstrating cross-chain token swaps with [**NEAR Inte
 ## 📚 Tutorial Steps
 
 Open each file _before_ executing it using the guide below. Each file has detailed comments that further educates you
-about each step. Some files also have configuration options for you to alter and experiment with. 
+about each step. Some files also have configuration options for you to alter and experiment with.
 
 ### Step 1: Get Available Tokens
 
 ```bash
 pnpm getTokens
 ```
+
 Runs logic found in [1-get-tokens.ts](./1click-example/1-get-tokens.ts):
+
 - Fetches all supported tokens across different blockchains
 - No authentication required
 - Displays tokens organized by blockchain
@@ -78,7 +81,9 @@ Runs logic found in [1-get-tokens.ts](./1click-example/1-get-tokens.ts):
 ```bash
 pnpm getQuote
 ```
+
 Runs logic found in [2-get-quote.ts](./1click-example/2-get-quote.ts):
+
 - Retrieves swap quotes with pricing and fees
 - Generates unique deposit addresses
 - Calculates expected output amounts
@@ -88,7 +93,9 @@ Runs logic found in [2-get-quote.ts](./1click-example/2-get-quote.ts):
 ```bash
 pnpm sendDeposit
 ```
+
 Runs logic found in [3-send-deposit.ts](./1click-example/3-send-deposit.ts):
+
 - Sends $NEAR tokens to the generated deposit address
 - Initiates the cross-chain swap process
 - Returns transaction hash for tracking
@@ -98,7 +105,9 @@ Runs logic found in [3-send-deposit.ts](./1click-example/3-send-deposit.ts):
 ```bash
 pnpm checkStatus
 ```
+
 Runs logic found in [4-check-status.ts](./1click-example/4-check-status.ts):
+
 - Monitors swap execution status
 - Tracks progress through different stages
 - Shows completion confirmation
@@ -108,11 +117,12 @@ Runs logic found in [4-check-status.ts](./1click-example/4-check-status.ts):
 ```bash
 pnpm fullSwap
 ```
+
 Runs logic found in [5-full-swap.ts](./1click-example/5-full-swap.ts):
+
 - Combines steps 2-4 into one seamless process
 - Automatic status monitoring until completion
 - _(NOTE: Configure swap options in `5-full-swap.ts` independently of other files)_
-
 
 ## 🏗️ Project Structure
 
@@ -130,14 +140,14 @@ Runs logic found in [5-full-swap.ts](./1click-example/5-full-swap.ts):
 ## 🔗 Dependencies
 
 - **[@defuse-protocol/one-click-sdk-typescript](https://www.npmjs.com/package/@defuse-protocol/one-click-sdk-typescript)**: Official 1-Click SDK
-- **[@near-js/*](https://github.com/near/near-api-js)**: NEAR blockchain interaction
+- **[@near-js/\*](https://github.com/near/near-api-js)**: NEAR blockchain interaction
 - **dotenv**: Environment variable management
 - **TypeScript**: Type-safe development
-
 
 ## 🔍 Status Monitoring
 
 The system tracks swaps through these stages:
+
 - `PENDING_DEPOSIT`: Waiting for deposit confirmation
 - `KNOWN_DEPOSIT_TX`: Deposit transaction detected
 - `PROCESSING`: Swap being executed

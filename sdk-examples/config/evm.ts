@@ -32,7 +32,7 @@ export const getEvmWalletFromPrivateKey = (
 };
 
 export const signEvmIntentForPublish = async ({
-  account ,
+  account,
   walletMessage,
 }: {
   account: WalletClient;

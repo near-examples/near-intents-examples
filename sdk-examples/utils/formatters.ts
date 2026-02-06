@@ -1,21 +1,21 @@
 import {
-	type AuthMethod,
-	authIdentity,
-	prepareBroadcastRequest,
-	type walletMessage,
-} from "@defuse-protocol/internal-utils";
+  type AuthMethod,
+  authIdentity,
+  prepareBroadcastRequest,
+  type walletMessage,
+} from '@defuse-protocol/internal-utils';
 
 /**
  * A branded string type representing a Defuse user ID.
  * The brand prevents accidental mixing with regular strings in TypeScript.
  */
-export type IntentsUserId = string & { __brand: "IntentsUserId" };
+export type IntentsUserId = string & { __brand: 'IntentsUserId' };
 
 export interface SignerCredentials {
-	/** The credential (blockchain address or WebAuthn public key) that will sign or has signed the intent */
-	credential: string;
-	/** The type of credential (chain or authentication method) */
-	credentialType: AuthMethod;
+  /** The credential (blockchain address or WebAuthn public key) that will sign or has signed the intent */
+  credential: string;
+  /** The type of credential (chain or authentication method) */
+  credentialType: AuthMethod;
 }
 
 /**
@@ -28,13 +28,13 @@ export interface SignerCredentials {
  * @returns Intent data serialized in protocol wire format
  */
 export function formatSignedIntent(
-	signature: walletMessage.WalletSignatureResult,
-	credentials: SignerCredentials,
+  signature: walletMessage.WalletSignatureResult,
+  credentials: SignerCredentials,
 ) {
-	return prepareBroadcastRequest.prepareSwapSignedData(signature, {
-		userAddress: credentials.credential,
-		userChainType: credentials.credentialType,
-	});
+  return prepareBroadcastRequest.prepareSwapSignedData(signature, {
+    userAddress: credentials.credential,
+    userChainType: credentials.credentialType,
+  });
 }
 
 /**
@@ -43,10 +43,10 @@ export function formatSignedIntent(
  * @returns A standardized Near Intents protocol user ID
  */
 export function formatUserIdentity(
-	credentials: SignerCredentials,
+  credentials: SignerCredentials,
 ): IntentsUserId {
-	return authIdentity.authHandleToIntentsUserId(
-		credentials.credential,
-		credentials.credentialType,
-	);
+  return authIdentity.authHandleToIntentsUserId(
+    credentials.credential,
+    credentials.credentialType,
+  );
 }
