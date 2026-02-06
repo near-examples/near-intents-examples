@@ -1,6 +1,6 @@
 import { BlockId, Finality } from 'near-api-js';
 import { z } from 'zod';
-import { nearJsonRpcProvider } from './config/near';
+import { nearJsonRpcProvider } from '../config/near';
 
 /*
  * Shared helpers for NEAR view calls and response decoding.

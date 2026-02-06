@@ -5,8 +5,7 @@ import {
 import { AuthMethod } from '@defuse-protocol/internal-utils';
 import 'dotenv/config';
 import { Account } from 'near-api-js';
-import { WalletClient } from 'viem';
-import { getEvmWalletFromPrivateKey } from './evm';
+import { getEvmWalletFromPrivateKey, WalletClient } from './evm';
 import { getNearWalletFromKeyPair } from './near';
 
 /*
@@ -81,14 +80,16 @@ export const getIntentsSigner = () => {
       authIdentifier: account.accountId,
       signer: getNearIntentsSignerNear(account),
       authMethod: AuthMethod.Near,
+      account: account,
     };
   }
   if (privateKeyEvm) {
     const walletClient = getEvmWalletFromPrivateKey(privateKeyEvm);
     return {
-      authIdentifier: '0xB66680c46522d3c1F3126f0b9F82d12D442A0C57',
+      authIdentifier: walletClient.account.address,
       signer: getNearIntentsSignerEvm(walletClient),
       authMethod: AuthMethod.EVM,
+      account: walletClient as WalletClient,
     };
   }
 

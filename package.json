@@ -20,12 +20,13 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write '**/*.{ts,json,md}'"
-
   },
   "dependencies": {
     "@defuse-protocol/intents-sdk": "^0.48.0",
     "@defuse-protocol/internal-utils": "^0.25.0",
     "@defuse-protocol/one-click-sdk-typescript": "0.1.15",
+    "@scure/base": "^2.0.0",
+    "@thames/monads": "^0.7.0",
     "dotenv": "^17.2.1",
     "near-api-js": "^7.0.4",
     "viem": "^2.45.1",

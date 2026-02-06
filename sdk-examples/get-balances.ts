@@ -3,7 +3,7 @@ import { formatUnits } from 'viem';
 import { z } from 'zod';
 import { getIntentsSigner } from './config/signer.js';
 import { getTokens } from './get-tokens-list';
-import { queryContract } from './utils';
+import { queryContract } from './utils/blockchain.js';
 
 /*
  * Example: read balances for all supported tokens for a given intents user.

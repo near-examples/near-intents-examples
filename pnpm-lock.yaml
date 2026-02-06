@@ -17,6 +17,12 @@ importers:
       '@defuse-protocol/one-click-sdk-typescript':
         specifier: 0.1.15
         version: 0.1.15
+      '@scure/base':
+        specifier: ^2.0.0
+        version: 2.0.0
+      '@thames/monads':
+        specifier: ^0.7.0
+        version: 0.7.0
       dotenv:
         specifier: ^17.2.1
         version: 17.2.1

@@ -1,9 +1,23 @@
-import { IIntentSigner } from '@defuse-protocol/intents-sdk';
+import {
+  authIdentity,
+  AuthMethod,
+  solverRelay,
+} from '@defuse-protocol/internal-utils';
+import {
+  OneClickService,
+  QuoteRequest,
+  QuoteResponse,
+} from '@defuse-protocol/one-click-sdk-typescript';
+import { base64 } from '@scure/base';
+import { Account } from 'near-api-js';
 import { parseUnits } from 'viem';
-import { solverRelay } from '@defuse-protocol/internal-utils';
+import { signEvmIntentForPublish, WalletClient } from './config/evm';
+import { signNearIntentForPublish } from './config/near';
 import { intentsSdk } from './config/sdk';
 import { getIntentsSigner } from './config/signer';
 import { getTokenById, Token } from './get-tokens-list';
+import { createTransferMessage } from './utils/messages';
+import { convertPublishIntentToLegacyFormat } from './utils/intent';
 
 /*
  * Example: fetch a swap quote and submit a swap intent.
@@ -21,17 +35,26 @@ export const getSwapQuote = async ({
   destinationAsset: Token;
   amountIn: string;
 }) => {
-  const quoteParams = {
-    defuse_asset_identifier_in: originAsset.intents_token_id,
-    defuse_asset_identifier_out: destinationAsset.intents_token_id,
-    exact_amount_in: amountIn,
-    wait_ms: 2888,
-  };
-  const quoteResponse = await solverRelay.getQuote({
-    config: {
-      logBalanceSufficient: true,
-    },
-    quoteParams,
+  const { authIdentifier } = getIntentsSigner();
+
+  const deadline = new Date();
+  deadline.setSeconds(deadline.getSeconds() + 60 * 20);
+
+  const quoteResponse = await OneClickService.getQuote({
+    deadline: deadline.toISOString(),
+    recipient: authIdentifier,
+    recipientType: QuoteRequest.recipientType.INTENTS,
+    refundTo: authIdentifier,
+    refundType: QuoteRequest.refundType.INTENTS,
+
+    depositType: QuoteRequest.depositType.INTENTS,
+    dry: false,
+    slippageTolerance: 100,
+
+    swapType: QuoteRequest.swapType.EXACT_INPUT,
+    originAsset: originAsset.near_token_id,
+    destinationAsset: destinationAsset.near_token_id,
+    amount: amountIn,
   });
   return quoteResponse;
 };
@@ -42,33 +65,75 @@ export const getSwapQuote = async ({
  */
 export const submitSwap = async ({
   quote,
-  signer,
+  account,
+  authIdentifier,
+  authMethod,
 }: {
-  quote: solverRelay.Quote;
-  signer: IIntentSigner;
+  quote: QuoteResponse;
+  account: Account | WalletClient;
+  authIdentifier: string;
+  authMethod: AuthMethod;
 }) => {
-  intentsSdk.setIntentSigner(signer);
-  const { intentHash } = await intentsSdk.signAndSendIntent({
-    relayParams: () => {
-      return {
-        quoteHashes: [quote.quote_hash],
-      };
-    },
-    intents: [
-      {
-        intent: 'token_diff',
-        diff: {
-          [quote.defuse_asset_identifier_in]: `-${quote.amount_in}`, //token in to sell
-          [quote.defuse_asset_identifier_out]: `${quote.amount_out}`, //token out to buy
-        },
-      },
-    ],
-  });
+  try {
+    const { nonce, deadline } = await intentsSdk
+      .intentBuilder()
+      .setDeadline(new Date(quote.quote.deadline ?? ''))
+      .build();
 
-  const intentTx = await intentsSdk.waitForIntentSettlement({
-    intentHash: intentHash,
-  });
-  return intentTx;
+    const tokenInAssetId = quote.quoteRequest.originAsset;
+    const signerId = authIdentity.authHandleToIntentsUserId(
+      authIdentifier,
+      authMethod,
+    );
+    const walletMessage = createTransferMessage(
+      [[tokenInAssetId, BigInt(quote.quoteRequest.amount)]], // tokenDeltas
+      {
+        signerId,
+        receiverId: quote.quote.depositAddress as string, // receiver (deposit address from 1CS)
+        deadlineTimestamp: Date.parse(deadline),
+        nonce: base64.decode(nonce),
+      },
+    );
+
+    const signatureIntent =
+      authMethod === AuthMethod.Near
+        ? await signNearIntentForPublish({
+            account: account as Account,
+            walletMessage,
+          })
+        : await signEvmIntentForPublish({
+            account: account as WalletClient,
+            walletMessage,
+          });
+
+    const publishResult = await solverRelay
+      .publishIntent(
+        signatureIntent,
+        { userAddress: authIdentifier, userChainType: authMethod },
+        [],
+      )
+      .then(convertPublishIntentToLegacyFormat);
+
+    if (publishResult.tag === 'err') {
+      throw new Error(publishResult.value.reason);
+    }
+
+    const { hash } = await intentsSdk.waitForIntentSettlement({
+      intentHash: publishResult.value,
+    });
+
+    const depositResponse = await OneClickService.submitDepositTx({
+      txHash: hash,
+      depositAddress: quote.quote.depositAddress as string,
+    });
+    return {
+      depositResponse,
+      txHash: hash,
+    };
+  } catch (error) {
+    console.error('Error submitting one click quote:', error);
+    throw error;
+  }
 };
 
 async function main() {
@@ -104,27 +169,17 @@ async function main() {
     amountIn: amountIn,
   });
   console.log('\nQuote received:');
-  console.dir(
-    {
-      quoteHash: quote.quote_hash,
-      amountIn: quote.amount_in,
-      amountOut: quote.amount_out,
-      tokenIn: quote.defuse_asset_identifier_in,
-      tokenOut: quote.defuse_asset_identifier_out,
-    },
-    { depth: null },
-  );
+  console.dir(quote.quote, { depth: null });
   if (quoteOnly) {
     console.log('\nQuote-only mode enabled. Skipping swap submission.');
     return;
   }
-  const { signer } = getIntentsSigner();
-  if (!signer) {
-    throw new Error('Signer not found');
-  }
+  const { account, authIdentifier, authMethod } = getIntentsSigner();
   const intentTx = await submitSwap({
-    quote: quote,
-    signer: signer,
+    quote,
+    account,
+    authIdentifier,
+    authMethod,
   });
   console.log('\nSwap submitted. Settlement result:');
   console.log(JSON.stringify(intentTx, null, 2));

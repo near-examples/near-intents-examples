@@ -1,3 +1,4 @@
+import { walletMessage } from '@defuse-protocol/internal-utils';
 import {
   Account,
   Chain,
@@ -28,4 +29,19 @@ export const getEvmWalletFromPrivateKey = (
     chain: mainnet,
     transport: http(),
   });
+};
+
+export const signEvmIntentForPublish = async ({
+  account ,
+  walletMessage,
+}: {
+  account: WalletClient;
+  walletMessage: walletMessage.WalletMessage;
+}) => {
+  const signature = await account.signMessage(walletMessage.ERC191);
+  return {
+    type: 'ERC191',
+    signatureData: signature,
+    signedData: walletMessage.ERC191,
+  } as const;
 };
