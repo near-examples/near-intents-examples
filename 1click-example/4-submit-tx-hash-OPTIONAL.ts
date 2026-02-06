@@ -1,8 +1,8 @@
 import {
   OneClickService,
   OpenAPI,
-} from "@defuse-protocol/one-click-sdk-typescript";
-import "dotenv/config";
+} from '@defuse-protocol/one-click-sdk-typescript';
+import 'dotenv/config';
 
 /**
  *  Step 6: Submit Transaction Hash (Optional)
@@ -13,15 +13,15 @@ import "dotenv/config";
  */
 
 // Initialize the API client
-OpenAPI.BASE = "https://1click.chaindefuser.com";
+OpenAPI.BASE = 'https://1click.chaindefuser.com';
 
 // Configure your JSON Web Token (JWT) required for most endpoints
 // Request one here -> https://partners.near-intents.org/sign-in
 // If you don't have a JWT, you can comment out line 18 but you will pay a 0.1% fee on all swaps
 OpenAPI.TOKEN = process.env.ONE_CLICK_JWT;
 
-const txHash = "0x123abc456def789";
-const depositAddress = "0x2527D02599Ba641c19FEa793cD0F167589a0f10D";
+const txHash = '0x123abc456def789';
+const depositAddress = '0x2527D02599Ba641c19FEa793cD0F167589a0f10D';
 
 export async function submitTxHash(txHash: string, depositAddress: string) {
   try {
@@ -34,7 +34,7 @@ export async function submitTxHash(txHash: string, depositAddress: string) {
       depositAddress,
     });
   } catch (error) {
-    console.error("Error submitting transaction hash:", error);
+    console.error('Error submitting transaction hash:', error);
     throw error;
   }
 }
@@ -42,6 +42,6 @@ export async function submitTxHash(txHash: string, depositAddress: string) {
 // Only run if this file is executed directly
 if (import.meta.url === new URL(import.meta.url).href) {
   submitTxHash(txHash, depositAddress)
-    .then((result) => console.log("\n\nSubmit tx hash RESPONSE:", result))
+    .then((result) => console.log('\n\nSubmit tx hash RESPONSE:', result))
     .catch(console.error);
 }

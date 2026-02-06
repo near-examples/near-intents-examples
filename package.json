@@ -16,7 +16,11 @@
     "sdk/get-deposit-address": "tsx sdk-examples/get-deposit-address.ts",
     "sdk/swap-tokens": "tsx sdk-examples/swap-tokens.ts",
     "sdk/transfer-tokens": "tsx sdk-examples/transfer-tokens.ts",
-    "sdk/withdraw-tokens": "tsx sdk-examples/withdraw-tokens.ts"
+    "sdk/withdraw-tokens": "tsx sdk-examples/withdraw-tokens.ts",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write '**/*.{ts,json,md}'"
+
   },
   "dependencies": {
     "@defuse-protocol/intents-sdk": "^0.48.0",
@@ -28,9 +32,16 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.54.0",
+    "@typescript-eslint/parser": "^8.54.0",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.5",
+    "prettier": "^3.8.1",
     "ts-node": "^10.9.2",
-    "tsx": "^4.21.0",
-    "typescript": "^5.4.2"
+    "typescript": "^5.4.2",
+    "typescript-eslint": "^8.54.0"
   }
 }

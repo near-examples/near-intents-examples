@@ -2,9 +2,9 @@ import {
   OneClickService,
   OpenAPI,
   QuoteRequest,
-} from "@defuse-protocol/one-click-sdk-typescript";
-import "dotenv/config";
-import { NEAR } from "near-api-js/tokens";
+} from '@defuse-protocol/one-click-sdk-typescript';
+import 'dotenv/config';
+import { NEAR } from 'near-api-js/tokens';
 
 /**
  *  Step 2: Get Quote
@@ -18,14 +18,14 @@ import { NEAR } from "near-api-js/tokens";
 // Example Swap Configuration
 const isTest = true; // set to true for quote estimation / testing, false for actual execution
 const senderAddress = process.env.SENDER_NEAR_ACCOUNT as string; // Configure in .env
-const recipientAddress = "0x553e771500f2d7529079918F93d86C0a845B540b"; // Token swap recipient address on Arbitrum
-const originAsset = "nep141:wrap.near"; // Native $NEAR
+const recipientAddress = '0x553e771500f2d7529079918F93d86C0a845B540b'; // Token swap recipient address on Arbitrum
+const originAsset = 'nep141:wrap.near'; // Native $NEAR
 const destinationAsset =
-  "nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near"; // Native $ARB
-const amount = NEAR.toUnits("0.5").toString();
+  'nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near'; // Native $ARB
+const amount = NEAR.toUnits('0.5').toString();
 
 // Initialize the API client
-OpenAPI.BASE = "https://1click.chaindefuser.com";
+OpenAPI.BASE = 'https://1click.chaindefuser.com';
 
 // Configure your JSON Web Token (JWT) required for most endpoints
 // Request one here -> https://docs.google.com/forms/d/e/1FAIpQLSdrSrqSkKOMb_a8XhwF0f7N5xZ0Y5CYgyzxiAuoC2g4a2N68g/viewform
@@ -38,7 +38,7 @@ export async function getQuote(
   recipientAddress: string,
   originAsset: string,
   destinationAsset: string,
-  amount: string
+  amount: string,
 ) {
   try {
     const quoteRequest: QuoteRequest = {
@@ -98,7 +98,7 @@ export async function getQuote(
       deadline: new Date(Date.now() + 3 * 60 * 1000).toISOString(),
 
       // Referral identifier for fee sharing/tracking
-      referral: "referral",
+      referral: 'referral',
 
       // Maximum time to wait for quote response in milliseconds
       quoteWaitingTimeMs: 3000,
@@ -108,7 +108,7 @@ export async function getQuote(
     const quote = await OneClickService.getQuote(quoteRequest);
     return quote;
   } catch (error) {
-    console.error("Error fetching quote:", error);
+    console.error('Error fetching quote:', error);
     throw error;
   }
 }
@@ -121,10 +121,10 @@ if (import.meta.url === new URL(import.meta.url).href) {
     recipientAddress,
     originAsset,
     destinationAsset,
-    amount
+    amount,
   )
     .then((result) =>
-      console.log("\n\nAuthenticated getQuote RESPONSE:", result)
+      console.log('\n\nAuthenticated getQuote RESPONSE:', result),
     )
     .catch(console.error);
 }

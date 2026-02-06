@@ -1,5 +1,5 @@
-import { OneClickService } from "@defuse-protocol/one-click-sdk-typescript";
-import { depositAddress } from "./3-send-deposit";
+import { OneClickService } from '@defuse-protocol/one-click-sdk-typescript';
+import { depositAddress } from './3-send-deposit';
 
 /**
  *  Step 4: Check status of Intent
@@ -21,33 +21,32 @@ export async function checkStatus(depositAddress: string) {
 }
 
 export async function pollStatusUntilSuccess(depositAddress: string) {
-  console.log("🔄 Starting status polling...");
+  console.log('🔄 Starting status polling...');
 
   while (true) {
     try {
       // Fetch status from 1-Click API `/status` endpoint
-      const statusResponse = await OneClickService.getExecutionStatus(
-        depositAddress
-      );
+      const statusResponse =
+        await OneClickService.getExecutionStatus(depositAddress);
       const status = statusResponse.status;
 
       console.log(`   Current status: ${status}`);
 
-      if (status === "SUCCESS") {
-        console.log("🎉 Intent Fulfilled!");
+      if (status === 'SUCCESS') {
+        console.log('🎉 Intent Fulfilled!');
         return statusResponse;
       }
 
       // If status is an error state, stop polling
-      if (status === "REFUNDED") {
+      if (status === 'REFUNDED') {
         console.log(`❌ Swap failed with status: ${status}`);
         return statusResponse;
       }
 
       await new Promise((resolve) => setTimeout(resolve, 5000));
     } catch (error) {
-      console.error("Error checking status:", error);
-      console.log("⏳ Waiting 5 seconds before retry...");
+      console.error('Error checking status:', error);
+      console.log('⏳ Waiting 5 seconds before retry...');
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }

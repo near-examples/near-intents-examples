@@ -155,6 +155,13 @@ The system tracks swaps through these stages:
 
 Contributions are welcome! Please feel free to submit issues and enhancement requests.
 
+Before submitting a PR, make sure your code passes linting:
+
+```bash
+pnpm lint        # check for issues
+pnpm lint:fix    # auto-fix issues
+```
+
 ## 📄 License
 
 This project is provided as educational examples for the 1-Click SDK and NEAR Intents ecosystem.
