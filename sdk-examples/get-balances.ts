@@ -77,6 +77,7 @@ export const getTokenBalances = async ({
     }));
     return result.filter((token) => token.balance !== '0');
   } catch (error) {
+    console.error(error);
     return [];
   }
 };
