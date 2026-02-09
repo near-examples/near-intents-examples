@@ -7,16 +7,26 @@ import {
   KeyPairSigner,
   Provider,
 } from 'near-api-js';
-/*
- * NEAR RPC configuration and account helpers.
+
+/**
+ *  NEAR Wallet Configuration
+ *
+ *  Helpers for creating a NEAR account from a key pair and signing intent
+ *  messages using NEP-413. Used when the signer is a NEAR wallet.
+ *
+ *  The RPC provider connects to NEAR mainnet via FastNEAR for low-latency
+ *  contract queries and transaction submission.
+ *
  */
 
+// NEAR mainnet RPC provider (FastNEAR endpoint)
 export const nearJsonRpcProvider = new JsonRpcProvider({
   url: 'https://rpc.mainnet.fastnear.com',
 });
 
 /**
- * Create a NEAR `Account` wrapper from a raw `KeyPair`.
+ * Create a NEAR `Account` wrapper from a raw ed25519 private key.
+ * The account ID is derived from the public key (hex-encoded).
  */
 export const getNearWalletFromKeyPair = (privateKey: string): Account => {
   const keyPair = KeyPair.fromString(privateKey as `ed25519:${string}`);
@@ -26,6 +36,10 @@ export const getNearWalletFromKeyPair = (privateKey: string): Account => {
   return account;
 };
 
+/**
+ * Sign an intent message using NEP-413 for publishing to the solver relay.
+ * Returns the signed data with the account ID, public key, and signature.
+ */
 export const signNearIntentForPublish = async ({
   account,
   walletMessage,
@@ -33,6 +47,7 @@ export const signNearIntentForPublish = async ({
   account: Account;
   walletMessage: walletMessage.WalletMessage;
 }) => {
+  // Sign the NEP-413 message using the NEAR account
   const signature = await account.signNep413Message({
     message: walletMessage.NEP413.message,
     nonce: walletMessage.NEP413.nonce,
@@ -43,6 +58,7 @@ export const signNearIntentForPublish = async ({
   if (!publicKey) {
     throw new Error('Public key not found');
   }
+
   return {
     type: 'NEP413',
     signatureData: {

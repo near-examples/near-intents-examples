@@ -1,12 +1,14 @@
 import { IntentsSDK } from '@defuse-protocol/intents-sdk';
 
-/*
- * Shared SDK configuration for the examples.
+/**
+ *  SDK Configuration
+ *
+ *  Shared Intents SDK instance used by all SDK examples.
+ *  Configured for the production environment with a referral identifier
+ *  for tracking example usage.
+ *
  */
 
-/**
- * Shared Intents SDK instance configured for production.
- */
 export const intentsSdk = new IntentsSDK({
   env: 'production',
   referral: 'near-intents-examples',

@@ -1,14 +1,42 @@
 import {
-  type AuthMethod,
   authIdentity,
+  type AuthMethod,
   poaBridge,
 } from '@defuse-protocol/internal-utils';
+import { fileURLToPath } from 'node:url';
+import { assetNetworkAdapter } from './config/chains';
 import { getIntentsSigner } from './config/signer';
 import { getTokenById, Token } from './get-tokens-list';
 
-/*
- * Example: request a deposit address for a token and auth identity.
+/**
+ *  Get Deposit Address
+ *
+ *  Requests a deposit address from the POA bridge for a specific token.
+ *  Once you receive the deposit address, you can send tokens from any
+ *  external wallet on the token's native chain to fund your intents account.
+ *
+ *  The deposit mode depends on the blockchain:
+ *   - SIMPLE: most chains (EVM, NEAR, Bitcoin, Solana, etc.)
+ *   - MEMO:   Stellar (requires a memo to identify the recipient)
+ *
+ *  The response contains:
+ *   - address: the deposit address on the token's native chain
+ *   - memo:    (Stellar only) the memo to include in the transaction
+ *
  */
+
+/**
+ * Determine the deposit mode for a given blockchain.
+ * Stellar requires a MEMO-based deposit; all other chains use SIMPLE.
+ */
+const getDepositMode = (blockchain: string) => {
+  switch (blockchain) {
+    case 'stellar':
+      return 'MEMO';
+    default:
+      return 'SIMPLE';
+  }
+};
 
 /**
  * Request a deposit address for a given token and user.
@@ -26,23 +54,17 @@ export async function getDepositAddress({
   let depositAddress: string;
   let memo: string | null;
   try {
+    // Derive the intents-internal account ID from auth credentials
     const account_id = authIdentity.authHandleToIntentsUserId(
       authIdentifier,
       authMethod,
     );
 
-    // Defuse asset identifier is in the format of blockchain:type
-    const [blockchain, type] = token.defuse_asset_identifier.split(':');
-
-    // If the token is a Stellar token, use the MEMO deposit mode, otherwise use the SIMPLE deposit mode
-    const depositMode = token.defuse_asset_identifier.includes('stellar')
-      ? 'MEMO'
-      : 'SIMPLE';
-
+    // Request a deposit address from the POA bridge API
     const quoteResponse = await poaBridge.httpClient.getDepositAddress({
       account_id,
-      chain: `${blockchain}:${type}`,
-      deposit_mode: depositMode,
+      chain: assetNetworkAdapter[token.blockchain],
+      deposit_mode: getDepositMode(token.blockchain),
     });
 
     if (!quoteResponse.address) {
@@ -61,25 +83,30 @@ export async function getDepositAddress({
   };
 }
 
+// Example: get the deposit address for wrapped NEAR
+const tokenId = 'nep141:wrap.near';
+
 async function main() {
+  // Resolve the signer from environment variables (NEAR or EVM private key)
   const { authIdentifier, authMethod } = getIntentsSigner();
+
   console.log('Fetching deposit address...');
-  if (!process.argv[2]) {
-    throw new Error('Usage: get-deposit-address <tokenId>');
-  }
+
+  // Look up the token by its intents asset ID
   const token = await getTokenById({
-    intents_token_id: process.argv[2] as string,
+    intents_token_id: tokenId,
   });
   console.log('Token:', token);
   if (!token) {
     throw new Error('Token not found');
   }
+
   const depositAddress = await getDepositAddress({
     authIdentifier,
     authMethod,
     token,
   });
-  console.log(`Token: ${token.intents_token_id}`);
+  console.log(`Token: ${token.assetId}`);
   console.log(`Deposit Address: ${depositAddress.address}`);
   if (depositAddress.memo) {
     console.log(`Memo: ${depositAddress.memo}`);
@@ -87,7 +114,7 @@ async function main() {
 }
 
 // Only run if this file is executed directly
-if (import.meta.url === new URL(import.meta.url).href) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     console.error(error);
     process.exit(1);

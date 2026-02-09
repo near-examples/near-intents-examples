@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import {
   OneClickService,
   OpenAPI,
@@ -40,7 +41,7 @@ export async function submitTxHash(txHash: string, depositAddress: string) {
 }
 
 // Only run if this file is executed directly
-if (import.meta.url === new URL(import.meta.url).href) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   submitTxHash(txHash, depositAddress)
     .then((result) => console.log('\n\nSubmit tx hash RESPONSE:', result))
     .catch(console.error);

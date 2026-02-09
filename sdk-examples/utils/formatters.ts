@@ -6,6 +6,14 @@ import {
 } from '@defuse-protocol/internal-utils';
 
 /**
+ *  Formatting Utilities
+ *
+ *  Helpers for converting between external identifiers and the NEAR Intents
+ *  protocol wire format. Used internally by the message creation utilities.
+ *
+ */
+
+/**
  * A branded string type representing a Defuse user ID.
  * The brand prevents accidental mixing with regular strings in TypeScript.
  */
@@ -19,13 +27,9 @@ export interface SignerCredentials {
 }
 
 /**
- * Serializes a signed intent into the protocol's wire format
+ * Serializes a signed intent into the protocol's wire format.
  * Transforms both signature and message data into the standardized
- * encoding expected by the Near Intents Protocol
- *
- * @param signature The signature result from the wallet
- * @param credentials The signer's credentials
- * @returns Intent data serialized in protocol wire format
+ * encoding expected by the NEAR Intents Protocol.
  */
 export function formatSignedIntent(
   signature: walletMessage.WalletSignatureResult,
@@ -38,9 +42,8 @@ export function formatSignedIntent(
 }
 
 /**
- * Converts a user's blockchain address or WebAuthn credential to a standardized Near Intents protocol ID
- * @param credentials The signer's credentials
- * @returns A standardized Near Intents protocol user ID
+ * Converts a user's blockchain address or WebAuthn credential to a
+ * standardized NEAR Intents protocol user ID.
  */
 export function formatUserIdentity(
   credentials: SignerCredentials,

@@ -2,12 +2,18 @@ import { BlockId, Finality } from 'near-api-js';
 import { z } from 'zod';
 import { nearJsonRpcProvider } from '../config/near';
 
-/*
- * Shared helpers for NEAR view calls and response decoding.
+/**
+ *  Blockchain Utilities
+ *
+ *  Helpers for querying NEAR smart contracts via RPC view calls.
+ *  Used by `get-balances.ts` to read token balances from the `intents.near`
+ *  verifier contract without requiring a signer or gas.
+ *
  */
 
 /**
  * Decode a NEAR RPC `call_function` response into a typed value using Zod.
+ * The RPC returns the result as a byte array which is decoded to JSON.
  */
 export function decodeQueryResult<T>(
   response: unknown,
@@ -30,6 +36,7 @@ export type OptionalBlockReference = {
 
 /**
  * Query a NEAR contract view method and return the decoded result.
+ * This is a read-only call that does not require gas or a signer.
  */
 export const queryContract = async ({
   contractId,
@@ -40,6 +47,7 @@ export const queryContract = async ({
   methodName: string;
   args: Record<string, unknown>;
 }): Promise<unknown> => {
+  // Make an RPC view call to the contract
   const response = await nearJsonRpcProvider.query({
     request_type: 'call_function',
     account_id: contractId,
@@ -48,5 +56,6 @@ export const queryContract = async ({
     finality: 'final',
   });
 
+  // Decode the byte-array response into a typed value
   return decodeQueryResult(response, z.unknown());
 };

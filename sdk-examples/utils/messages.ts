@@ -8,6 +8,21 @@ import {
   type SignerCredentials,
 } from './formatters';
 
+/**
+ *  Message Creation Utilities
+ *
+ *  Factory functions for building intent messages that can be signed by
+ *  NEAR or EVM wallets. These messages are the core data structure of the
+ *  NEAR Intents protocol — they describe what tokens to move and where.
+ *
+ *  Available message types:
+ *   - `createSwapIntentMessage`         — token swap between two assets
+ *   - `createTransferMessage`           — token transfer to a specific receiver
+ *   - `createEmptyIntentMessage`        — empty message for testing connections
+ *   - `createWalletVerificationMessage` — verification message (Tron-compatible)
+ *
+ */
+
 export interface IntentMessageConfig {
   /**
    * User identifier either as DefuseUserId or SignerCredentials

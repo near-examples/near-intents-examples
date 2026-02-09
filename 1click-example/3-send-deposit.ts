@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
 import { NEAR } from 'near-api-js/tokens';
 import { getAccount } from './near';
@@ -44,7 +45,7 @@ export async function sendTokens(
 }
 
 // Only run if this file is executed directly
-if (import.meta.url === new URL(import.meta.url).href) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   sendTokens(senderAccount, senderPrivateKey, depositAddress, depositAmount)
     .then((result) =>
       console.log(

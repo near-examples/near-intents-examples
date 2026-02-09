@@ -10,21 +10,40 @@ import {
 } from '@defuse-protocol/one-click-sdk-typescript';
 import { base64 } from '@scure/base';
 import { Account } from 'near-api-js';
+import { fileURLToPath } from 'node:url';
 import { parseUnits } from 'viem';
 import { signEvmIntentForPublish, WalletClient } from './config/evm';
 import { signNearIntentForPublish } from './config/near';
 import { intentsSdk } from './config/sdk';
 import { getIntentsSigner } from './config/signer';
 import { getTokenById, Token } from './get-tokens-list';
-import { createTransferMessage } from './utils/messages';
 import { convertPublishIntentToLegacyFormat } from './utils/intent';
+import { createTransferMessage } from './utils/messages';
 
-/*
- * Example: fetch a swap quote and submit a swap intent.
+/**
+ *  Swap Tokens
+ *
+ *  Performs an internal token swap within the NEAR Intents system.
+ *  Tokens must already be deposited into your intents account before swapping.
+ *
+ *  The process is:
+ *   1. Request a swap quote from the 1-Click API (`/quote` endpoint)
+ *      - depositType is set to INTENTS (tokens are already inside the system)
+ *      - recipient and refund are both set to the intents account
+ *   2. Build and sign an intent message using the quote's deposit address
+ *   3. Publish the signed intent to the solver relay
+ *   4. Wait for the intent to settle on-chain
+ *   5. Submit the settlement tx hash to the 1-Click API for tracking
+ *
+ *  Supports both NEAR (NEP-413) and EVM (ERC-191) signing.
+ *  Set `quoteOnly = true` to preview the quote without executing the swap.
+ *
  */
 
 /**
  * Request a swap quote for a token pair and exact input amount.
+ * The quote is configured for an internal (INTENTS) deposit, meaning the
+ * tokens are already inside the intents system.
  */
 export const getSwapQuote = async ({
   originAsset,
@@ -37,23 +56,32 @@ export const getSwapQuote = async ({
 }) => {
   const { authIdentifier } = getIntentsSigner();
 
+  // Quote expires 20 minutes from now
   const deadline = new Date();
   deadline.setSeconds(deadline.getSeconds() + 60 * 20);
 
+  // Fetch quote from 1-Click API `/quote` endpoint
   const quoteResponse = await OneClickService.getQuote({
+    // Quote expiration in ISO format
     deadline: deadline.toISOString(),
+
+    // Recipient and refund both point to the intents account (internal swap)
     recipient: authIdentifier,
     recipientType: QuoteRequest.recipientType.INTENTS,
     refundTo: authIdentifier,
     refundType: QuoteRequest.refundType.INTENTS,
 
+    // INTENTS deposit type: tokens are already inside the intents system
     depositType: QuoteRequest.depositType.INTENTS,
     dry: false,
+
+    // Maximum acceptable slippage as basis points (100 = 1.00%)
     slippageTolerance: 100,
 
+    // EXACT_INPUT: input amount is fixed, output varies
     swapType: QuoteRequest.swapType.EXACT_INPUT,
-    originAsset: originAsset.near_token_id,
-    destinationAsset: destinationAsset.near_token_id,
+    originAsset: originAsset.assetId,
+    destinationAsset: destinationAsset.assetId,
     amount: amountIn,
   });
   return quoteResponse;
@@ -75,26 +103,29 @@ export const submitSwap = async ({
   authMethod: AuthMethod;
 }) => {
   try {
+    // Build intent nonce and deadline from the SDK
     const { nonce, deadline } = await intentsSdk
       .intentBuilder()
       .setDeadline(new Date(quote.quote.deadline ?? ''))
       .build();
 
+    // Prepare the transfer message describing the swap
     const tokenInAssetId = quote.quoteRequest.originAsset;
     const signerId = authIdentity.authHandleToIntentsUserId(
       authIdentifier,
       authMethod,
     );
     const walletMessage = createTransferMessage(
-      [[tokenInAssetId, BigInt(quote.quoteRequest.amount)]], // tokenDeltas
+      [[tokenInAssetId, BigInt(quote.quoteRequest.amount)]], // token deltas (what the user sends)
       {
         signerId,
-        receiverId: quote.quote.depositAddress as string, // receiver (deposit address from 1CS)
+        receiverId: quote.quote.depositAddress as string, // deposit address from the quote
         deadlineTimestamp: Date.parse(deadline),
         nonce: base64.decode(nonce),
       },
     );
 
+    // Sign the intent using the appropriate method (NEAR NEP-413 or EVM ERC-191)
     const signatureIntent =
       authMethod === AuthMethod.Near
         ? await signNearIntentForPublish({
@@ -106,6 +137,7 @@ export const submitSwap = async ({
             walletMessage,
           });
 
+    // Publish the signed intent to the solver relay for execution
     const publishResult = await solverRelay
       .publishIntent(
         signatureIntent,
@@ -118,10 +150,12 @@ export const submitSwap = async ({
       throw new Error(publishResult.value.reason);
     }
 
+    // Wait for the intent to settle on-chain
     const { hash } = await intentsSdk.waitForIntentSettlement({
       intentHash: publishResult.value,
     });
 
+    // Submit the settlement tx hash to the 1-Click API for tracking
     const depositResponse = await OneClickService.submitDepositTx({
       txHash: hash,
       depositAddress: quote.quote.depositAddress as string,
@@ -136,20 +170,20 @@ export const submitSwap = async ({
   }
 };
 
+// Example Swap Configuration
+const fromTokenId =
+  'nep141:arb-0xaf88d065e77c8cc2239327c5edb3a432268e5831.omft.near'; // USDC on Arbitrum
+const toTokenId = 'nep141:wrap.near'; // Wrapped NEAR
+const amount = '0.5'; // Human-readable amount (will be converted to smallest unit)
+const quoteOnly = false; // Set to true to preview the quote without executing the swap
+
 async function main() {
-  const fromTokenId = process.argv[2] as string;
-  const toTokenId = process.argv[3] as string;
-  const amount = process.argv[4] as string;
-  const quoteOnly = process.argv.includes('--quote-only');
-  if (!fromTokenId || !toTokenId || !amount) {
-    throw new Error(
-      'Usage: swap-tokens <fromTokenId> <toTokenId> <amount> [--quote-only]',
-    );
-  }
   console.log('Requesting swap quote...');
   console.log(`From: ${fromTokenId}`);
   console.log(`To: ${toTokenId}`);
   console.log(`Amount in: ${amount}`);
+
+  // Look up token metadata for both sides of the swap
   const fromToken = await getTokenById({
     intents_token_id: fromTokenId,
   });
@@ -162,7 +196,11 @@ async function main() {
   if (!toToken) {
     throw new Error('Token not found');
   }
+
+  // Convert human-readable amount to smallest unit using token decimals
   const amountIn = parseUnits(amount, fromToken.decimals).toString();
+
+  // Step 1: Get swap quote
   const quote = await getSwapQuote({
     originAsset: fromToken,
     destinationAsset: toToken,
@@ -170,10 +208,13 @@ async function main() {
   });
   console.log('\nQuote received:');
   console.dir(quote.quote, { depth: null });
+
   if (quoteOnly) {
     console.log('\nQuote-only mode enabled. Skipping swap submission.');
     return;
   }
+
+  // Step 2: Sign and submit the swap intent
   const { account, authIdentifier, authMethod } = getIntentsSigner();
   const intentTx = await submitSwap({
     quote,
@@ -186,7 +227,7 @@ async function main() {
 }
 
 // Only run if this file is executed directly
-if (import.meta.url === new URL(import.meta.url).href) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     console.error(error);
     process.exit(1);

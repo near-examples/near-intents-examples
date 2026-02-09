@@ -1,6 +1,15 @@
 import type { solverRelay } from '@defuse-protocol/internal-utils';
 import type { Result } from '@thames/monads';
 
+/**
+ *  Intent Utilities
+ *
+ *  Adapter to convert the solver relay's `Result` response into the legacy
+ *  `{ tag, value }` format used by the SDK examples. Maps specific error
+ *  codes to human-readable publish error reasons.
+ *
+ */
+
 export type ParsedPublishErrors =
   | {
       reason:

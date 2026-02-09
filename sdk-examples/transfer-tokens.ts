@@ -3,13 +3,29 @@ import {
   IIntentSigner,
   RouteEnum,
 } from '@defuse-protocol/intents-sdk';
+import { authIdentity, AuthMethod } from '@defuse-protocol/internal-utils';
+import { fileURLToPath } from 'node:url';
 import { parseUnits } from 'viem';
 import { intentsSdk } from './config/sdk';
 import { getIntentsSigner } from './config/signer';
 import { getTokenById, Token } from './get-tokens-list';
 
-/*
- * Example: internal transfer between intents accounts.
+/**
+ *  Transfer Tokens (Internal)
+ *
+ *  Transfers tokens between two intents accounts without leaving the system.
+ *  This is an internal transfer — no bridging or on-chain transactions on
+ *  external chains are involved, so there are no withdrawal fees.
+ *
+ *  The process is:
+ *   1. Build a withdrawal intent with the `InternalTransfer` route
+ *   2. Sign the intent with the configured signer (NEAR or EVM)
+ *   3. Submit the signed intent and wait for on-chain settlement
+ *
+ *  The recipient address should be the intents-internal user ID of the receiver.
+ *  Use `authHandleToIntentsUserId` to convert an external address to the
+ *  internal format.
+ *
  */
 
 /**
@@ -27,15 +43,22 @@ export const transferToken = async ({
   toAddress: string;
   signer: IIntentSigner;
 }) => {
+  // Build the withdrawal intent with the internal transfer route (no bridging)
   const withdrawalIntents = await intentsSdk.createWithdrawalIntents({
     withdrawalParams: {
-      assetId: token.intents_token_id,
+      assetId: token.assetId,
       amount: BigInt(amount),
-      destinationAddress: toAddress,
-      destinationMemo: undefined, // Destination memo is only used for XRP Ledger withdrawals
+      // Convert the recipient's external address to an intents-internal user ID
+      destinationAddress: authIdentity.authHandleToIntentsUserId(
+        toAddress,
+        AuthMethod.EVM,
+      ),
+      destinationMemo: undefined, // Only used for XRP Ledger withdrawals
       feeInclusive: false,
+      // Use the internal transfer route (no external chain fees)
       routeConfig: createInternalTransferRoute(),
     },
+    // Internal transfers have zero fees
     feeEstimation: {
       amount: 0n,
       quote: null,
@@ -45,39 +68,53 @@ export const transferToken = async ({
     },
   });
 
+  // Set the signer and submit the intent
   intentsSdk.setIntentSigner(signer);
 
   const { intentHash } = await intentsSdk.signAndSendIntent({
     intents: withdrawalIntents,
   });
 
+  // Wait for the intent to settle on-chain
   const { hash } = await intentsSdk.waitForIntentSettlement({ intentHash });
   return {
     txHash: hash,
   };
 };
 
+// Example Transfer Configuration
+const tokenId = 'nep141:wrap.near'; // Wrapped NEAR
+const amount = '0.1'; // Human-readable amount (will be converted to smallest unit)
+
+// Replace '0xxxxxx' with the actual EVM address you want to transfer to
+const toAddress = authIdentity.authHandleToIntentsUserId(
+  '0xxxxxx',
+  AuthMethod.EVM,
+);
+
 async function main() {
+  // Look up the token by its intents asset ID
   const token = await getTokenById({
-    intents_token_id: process.argv[2] as string,
+    intents_token_id: tokenId,
   });
   if (!token) {
     throw new Error('Token not found');
   }
-  const amount = process.argv[3] as string;
-  const toAddress = process.argv[4] as string;
-  if (!amount || !toAddress) {
-    throw new Error('Usage: transfer-tokens <tokenId> <amount> <toAddress>');
-  }
+
   console.log('Preparing internal transfer...');
-  console.log(`Token: ${token.intents_token_id}`);
+  console.log(`Token: ${token.assetId}`);
   console.log(`Amount (human): ${amount}`);
   console.log(`To: ${toAddress}`);
+
+  // Convert human-readable amount to smallest unit using token decimals
   const amountIn = parseUnits(amount, token.decimals).toString();
+
+  // Resolve the signer from environment variables
   const { signer } = getIntentsSigner();
   if (!signer) {
     throw new Error('Signer not found');
   }
+
   const txHash = await transferToken({
     token: token,
     amount: amountIn,
@@ -89,7 +126,7 @@ async function main() {
 }
 
 // Only run if this file is executed directly
-if (import.meta.url === new URL(import.meta.url).href) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   main().catch((error) => {
     console.error(error);
     process.exit(1);

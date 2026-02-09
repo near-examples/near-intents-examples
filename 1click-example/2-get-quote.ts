@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import {
   OneClickService,
   OpenAPI,
@@ -114,7 +115,7 @@ export async function getQuote(
 }
 
 // Only run if this file is executed directly
-if (import.meta.url === new URL(import.meta.url).href) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   getQuote(
     isTest,
     senderAddress,

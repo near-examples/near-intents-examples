@@ -11,14 +11,18 @@ import {
 import { privateKeyToAccount } from 'viem/accounts';
 import { mainnet } from 'viem/chains';
 
-/*
- * EVM client setup helpers for signing intents.
+/**
+ *  EVM Wallet Configuration
+ *
+ *  Helpers for creating a Viem wallet client and signing intent messages
+ *  using ERC-191 personal_sign. Used when the signer is an EVM wallet.
+ *
  */
 
 export type WalletClient = ViemWalletClient<Transport, Chain, Account>;
 
 /**
- * Build a Viem wallet client for mainnet using the provided account.
+ * Build a Viem wallet client for Ethereum mainnet from a raw private key.
  */
 export const getEvmWalletFromPrivateKey = (
   privateKey: string,
@@ -31,6 +35,10 @@ export const getEvmWalletFromPrivateKey = (
   });
 };
 
+/**
+ * Sign an intent message using ERC-191 (personal_sign) for publishing
+ * to the solver relay.
+ */
 export const signEvmIntentForPublish = async ({
   account,
   walletMessage,
