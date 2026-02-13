@@ -1,8 +1,7 @@
 import { IIntentSigner, WithdrawalParams } from '@defuse-protocol/intents-sdk';
 import { fileURLToPath } from 'node:url';
 import { parseUnits, stringify } from 'viem';
-import { intentsSdk } from './config/sdk';
-import { getIntentsSigner } from './config/signer';
+import { getIntentsSignerNear, intentsSdk } from './config';
 import { getTokenById, Token } from './get-tokens-list';
 
 /**
@@ -85,7 +84,7 @@ const withdrawalQuoteOnly = false; // Set to true to preview fees without execut
 
 async function main() {
   // Resolve the signer from environment variables
-  const { signer } = getIntentsSigner();
+  const { signer } = getIntentsSignerNear();
   if (!signer) {
     throw new Error('Signer not found');
   }

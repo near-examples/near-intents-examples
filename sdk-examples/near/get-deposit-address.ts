@@ -4,8 +4,8 @@ import {
   poaBridge,
 } from '@defuse-protocol/internal-utils';
 import { fileURLToPath } from 'node:url';
-import { assetNetworkAdapter } from './config/chains';
-import { getIntentsSigner } from './config/signer';
+import { assetNetworkAdapter } from './chains';
+import { getIntentsSignerNear } from './config';
 import { getTokenById, Token } from './get-tokens-list';
 
 /**
@@ -88,7 +88,7 @@ const tokenId = 'nep141:wrap.near';
 
 async function main() {
   // Resolve the signer from environment variables (NEAR or EVM private key)
-  const { authIdentifier, authMethod } = getIntentsSigner();
+  const { authIdentifier, authMethod } = getIntentsSignerNear();
 
   console.log('Fetching deposit address...');
 

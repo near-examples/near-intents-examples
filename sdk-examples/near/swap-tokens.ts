@@ -1,6 +1,7 @@
 import {
   authIdentity,
   AuthMethod,
+  messageFactory,
   solverRelay,
 } from '@defuse-protocol/internal-utils';
 import {
@@ -12,13 +13,8 @@ import { base64 } from '@scure/base';
 import { Account } from 'near-api-js';
 import { fileURLToPath } from 'node:url';
 import { parseUnits } from 'viem';
-import { signEvmIntentForPublish, WalletClient } from './config/evm';
-import { signNearIntentForPublish } from './config/near';
-import { intentsSdk } from './config/sdk';
-import { getIntentsSigner } from './config/signer';
+import { getIntentsSignerNear, intentsSdk } from './config';
 import { getTokenById, Token } from './get-tokens-list';
-import { convertPublishIntentToLegacyFormat } from './utils/intent';
-import { createTransferMessage } from './utils/messages';
 
 /**
  *  Swap Tokens
@@ -54,7 +50,7 @@ export const getSwapQuote = async ({
   destinationAsset: Token;
   amountIn: string;
 }) => {
-  const { authIdentifier } = getIntentsSigner();
+  const { authIdentifier } = getIntentsSignerNear();
 
   // Quote expires 20 minutes from now
   const deadline = new Date();
@@ -98,7 +94,7 @@ export const submitSwap = async ({
   authMethod,
 }: {
   quote: QuoteResponse;
-  account: Account | WalletClient;
+  account: Account;
   authIdentifier: string;
   authMethod: AuthMethod;
 }) => {
@@ -109,50 +105,53 @@ export const submitSwap = async ({
       .setDeadline(new Date(quote.quote.deadline ?? ''))
       .build();
 
-    // Prepare the transfer message describing the swap
     const tokenInAssetId = quote.quoteRequest.originAsset;
     const signerId = authIdentity.authHandleToIntentsUserId(
       authIdentifier,
       authMethod,
     );
-    const walletMessage = createTransferMessage(
-      [[tokenInAssetId, BigInt(quote.quoteRequest.amount)]], // token deltas (what the user sends)
-      {
-        signerId,
-        receiverId: quote.quote.depositAddress as string, // deposit address from the quote
-        deadlineTimestamp: Date.parse(deadline),
-        nonce: base64.decode(nonce),
-      },
-    );
+
+    const innerMessage = messageFactory.makeInnerTransferMessage({
+      tokenDeltas: [[tokenInAssetId, BigInt(quote.quoteRequest.amount)]],
+      signerId: signerId,
+      deadlineTimestamp: Date.parse(deadline), // or Date.now() + 5 * 60 * 1000
+      receiverId: quote.quote.depositAddress as string, // deposit address from the quote
+      memo: undefined,
+    });
+
+    const walletMessage = messageFactory.makeSwapMessage({
+      innerMessage,
+      nonce: base64.decode(nonce),
+    });
 
     // Sign the intent using the appropriate method (NEAR NEP-413 or EVM ERC-191)
-    const signatureIntent =
-      authMethod === AuthMethod.Near
-        ? await signNearIntentForPublish({
-            account: account as Account,
-            walletMessage,
-          })
-        : await signEvmIntentForPublish({
-            account: account as WalletClient,
-            walletMessage,
-          });
+    const signatureIntent = await account.signNep413Message({
+      message: walletMessage.NEP413.message,
+      nonce: walletMessage.NEP413.nonce,
+      recipient: walletMessage.NEP413.recipient,
+    });
 
     // Publish the signed intent to the solver relay for execution
-    const publishResult = await solverRelay
-      .publishIntent(
-        signatureIntent,
-        { userAddress: authIdentifier, userChainType: authMethod },
-        [],
-      )
-      .then(convertPublishIntentToLegacyFormat);
-
-    if (publishResult.tag === 'err') {
-      throw new Error(publishResult.value.reason);
+    const publishResult = await solverRelay.publishIntent(
+      {
+        type: 'NEP413',
+        signatureData: {
+          accountId: signatureIntent.accountId,
+          publicKey: signatureIntent.publicKey.toString(),
+          signature: base64.encode(signatureIntent.signature),
+        },
+        signedData: walletMessage.NEP413,
+      },
+      { userAddress: authIdentifier, userChainType: authMethod },
+      [],
+    );
+    if (publishResult.isErr()) {
+      throw new Error(publishResult.unwrapErr().message);
     }
 
     // Wait for the intent to settle on-chain
     const { hash } = await intentsSdk.waitForIntentSettlement({
-      intentHash: publishResult.value,
+      intentHash: publishResult.unwrap(),
     });
 
     // Submit the settlement tx hash to the 1-Click API for tracking
@@ -215,7 +214,7 @@ async function main() {
   }
 
   // Step 2: Sign and submit the swap intent
-  const { account, authIdentifier, authMethod } = getIntentsSigner();
+  const { account, authIdentifier, authMethod } = getIntentsSignerNear();
   const intentTx = await submitSwap({
     quote,
     account,

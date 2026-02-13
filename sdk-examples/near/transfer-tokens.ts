@@ -6,8 +6,7 @@ import {
 import { authIdentity, AuthMethod } from '@defuse-protocol/internal-utils';
 import { fileURLToPath } from 'node:url';
 import { parseUnits } from 'viem';
-import { intentsSdk } from './config/sdk';
-import { getIntentsSigner } from './config/signer';
+import { getIntentsSignerNear, intentsSdk } from './config';
 import { getTokenById, Token } from './get-tokens-list';
 
 /**
@@ -110,7 +109,7 @@ async function main() {
   const amountIn = parseUnits(amount, token.decimals).toString();
 
   // Resolve the signer from environment variables
-  const { signer } = getIntentsSigner();
+  const { signer } = getIntentsSignerNear();
   if (!signer) {
     throw new Error('Signer not found');
   }
