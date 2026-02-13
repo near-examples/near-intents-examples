@@ -16,6 +16,12 @@ import { getTokenById, Token } from './get-tokens-list';
  *  This is an internal transfer — no bridging or on-chain transactions on
  *  external chains are involved, so there are no withdrawal fees.
  *
+ *  Why "withdrawal" API for internal transfers?
+ *  The SDK reuses the withdrawal flow with a special `InternalTransfer` route.
+ *  Under the hood, both operations move tokens out of your balance — the only
+ *  difference is the destination: another intents account vs. an external chain.
+ *  Because tokens never leave the NEAR chain, the fee is zero.
+ *
  *  The process is:
  *   1. Build a withdrawal intent with the `InternalTransfer` route
  *   2. Sign the intent with the configured signer (NEAR or EVM)

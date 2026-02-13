@@ -21,14 +21,19 @@ import { getTokenById, Token } from './get-tokens-list';
  *  Performs an internal token swap within the NEAR Intents system.
  *  Tokens must already be deposited into your intents account before swapping.
  *
- *  The process is:
+ *  Intent lifecycle:
  *   1. Request a swap quote from the 1-Click API (`/quote` endpoint)
  *      - depositType is set to INTENTS (tokens are already inside the system)
  *      - recipient and refund are both set to the intents account
  *   2. Build and sign an intent message using the quote's deposit address
- *   3. Publish the signed intent to the solver relay
- *   4. Wait for the intent to settle on-chain
+ *   3. Publish the signed intent to the solver relay — an off-chain order book
+ *      where competing solvers bid to fill your intent at the best price
+ *   4. A solver picks up the intent and settles it on-chain
  *   5. Submit the settlement tx hash to the 1-Click API for tracking
+ *
+ *  The signed message contains "token deltas" — the amounts you're willing to
+ *  give up. The solver provides the other side of the trade. Because solvers
+ *  compete, you generally get better prices than a single DEX.
  *
  *  Supports both NEAR (NEP-413) and EVM (ERC-191) signing.
  *  Set `quoteOnly = true` to preview the quote without executing the swap.
@@ -126,7 +131,8 @@ export const submitSwap = async ({
     // Sign the intent using the appropriate method (NEAR NEP-413 or EVM ERC-191)
     const signatureIntent = await account.signMessage(walletMessage.ERC191);
 
-    // Publish the signed intent to the solver relay for execution
+    // Publish the signed intent to the solver relay (off-chain order book).
+    // Solvers compete to fill the intent — no on-chain tx happens until settlement.
     const publishResult = await solverRelay.publishIntent(
       {
         type: 'ERC191',

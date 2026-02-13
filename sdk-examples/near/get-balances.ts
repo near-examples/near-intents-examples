@@ -40,7 +40,10 @@ export type OptionalBlockReference = {
 
 /**
  * Query a NEAR contract view method and return the decoded result.
- * This is a read-only call that does not require gas or a signer.
+ *
+ * View calls are free — they read state without modifying it, so they don't
+ * require gas or a signer. This makes balance checks and other reads
+ * zero-cost operations.
  */
 export const queryContract = async ({
   contractId,
@@ -82,6 +85,10 @@ export const queryContract = async ({
 /**
  * Fetch token balances in a single contract call using `mt_batch_balance_of`.
  * Returns the raw on-chain balances as `bigint[]` in the same order as `tokenIds`.
+ *
+ * The `mt_` prefix follows NEP-245 (Multi Token standard), which lets a single
+ * contract manage many token types — that's how `intents.near` tracks balances
+ * for every supported asset in one place.
  */
 export const batchBalanceOf = async ({
   accountId,
@@ -119,7 +126,9 @@ export const getTokenBalances = async ({
   authMethod: AuthMethod;
 }) => {
   try {
-    // Derive the intents-internal account ID from the user's auth credentials
+    // `authHandleToIntentsUserId` maps an external identity (NEAR account ID,
+    // EVM address, etc.) to the key used inside the intents contract's storage.
+    // For NEAR accounts it's the account ID itself; for EVM it's the lowercased address.
     const accountId = authIdentity.authHandleToIntentsUserId(
       authIdentifier,
       authMethod,

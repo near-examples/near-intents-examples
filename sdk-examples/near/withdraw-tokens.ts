@@ -10,9 +10,16 @@ import { getTokenById, Token } from './get-tokens-list';
  *  Withdraws tokens from your NEAR Intents account to an external address
  *  on the token's native chain (e.g. NEAR, Arbitrum, Solana, etc.).
  *
+ *  Withdrawal fees cover the gas costs on the destination chain (e.g. Ethereum
+ *  L1 gas, Solana transaction fees). The fee varies by chain and is estimated
+ *  before submission so you know the exact cost upfront.
+ *
+ *  When `feeInclusive: true`, the fee is deducted from the withdrawal amount —
+ *  so if you withdraw 1.0 USDC with a 0.01 fee, you receive 0.99 USDC on the
+ *  destination chain. This avoids needing to calculate the fee separately.
+ *
  *  The process is:
  *   1. Estimate the withdrawal fee using `estimateWithdrawalFee`
- *      - Fee is deducted from the withdrawal amount when `feeInclusive: true`
  *   2. Submit the withdrawal using `processWithdrawal`
  *   3. Wait for the intent to settle on-chain
  *

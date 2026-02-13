@@ -29,7 +29,16 @@ export const nearJsonRpcProvider = new JsonRpcProvider({
  *  EVM Wallet Configuration
  *
  *  Helpers for creating a Viem wallet client and signing intent messages
- *  using ERC-191 personal_sign. Used when the signer is an EVM wallet.
+ *  using ERC-191 `personal_sign`. Used when the signer is an EVM wallet.
+ *
+ *  ERC-191 is Ethereum's standard for signing arbitrary messages (the
+ *  "\x19Ethereum Signed Message:\n" prefix). The intents system accepts
+ *  these signatures to authorize token movements — even though balances live
+ *  on NEAR, an EVM key can control them.
+ *
+ *  Note: Even with an EVM signer, all contract queries (balances, token lists)
+ *  go to the NEAR RPC — the `intents.near` contract on NEAR is the single
+ *  source of truth for all balances regardless of signer type.
  *
  */
 

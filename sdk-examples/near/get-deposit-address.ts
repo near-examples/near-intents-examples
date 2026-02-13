@@ -11,13 +11,17 @@ import { getTokenById, Token } from './get-tokens-list';
 /**
  *  Get Deposit Address
  *
- *  Requests a deposit address from the POA bridge for a specific token.
- *  Once you receive the deposit address, you can send tokens from any
- *  external wallet on the token's native chain to fund your intents account.
+ *  Requests a deposit address from the POA (Proof of Authority) bridge for a
+ *  specific token. The bridge generates a unique per-user deposit address on
+ *  the token's native chain — once you send tokens there, the bridge detects
+ *  the deposit and credits your intents account automatically.
  *
  *  The deposit mode depends on the blockchain:
- *   - SIMPLE: most chains (EVM, NEAR, Bitcoin, Solana, etc.)
- *   - MEMO:   Stellar (requires a memo to identify the recipient)
+ *   - SIMPLE: most chains (EVM, NEAR, Bitcoin, Solana, etc.) — each user gets
+ *     a unique address
+ *   - MEMO:   Stellar uses a shared deposit address with a per-user memo to
+ *     identify the recipient (Stellar's account model makes per-user addresses
+ *     impractical)
  *
  *  The response contains:
  *   - address: the deposit address on the token's native chain

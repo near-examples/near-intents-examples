@@ -31,6 +31,9 @@ import { getIntentsSignerNear } from './config';
 
 /**
  * Convert an auth handle (NEAR account or EVM address) into an intents user ID.
+ * This internal ID is what the `intents.near` contract uses as the storage key
+ * for balances and permissions — you need it for any operation that references
+ * a user inside the system.
  */
 export const getInternalAddress = async ({
   authIdentifier,

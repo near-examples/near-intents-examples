@@ -63,12 +63,12 @@ export type SupportedBridge =
 /**
  *  Chain Mapping
  *
- *  Bidirectional mapping between the human-readable chain names used in the
- *  token list (e.g. "arbitrum") and the `BlockchainEnum` values used by the
- *  POA bridge and internal-utils API.
+ *  Two mapping directions exist because different APIs use different identifiers:
+ *   - The token list API returns human-readable chain names (e.g. "arbitrum")
+ *   - The POA bridge API expects `BlockchainEnum` values (e.g. BlockchainEnum.ARBITRUM)
  *
- *  `assetNetworkAdapter`        — chain name → BlockchainEnum
- *  `reverseAssetNetworkAdapter` — BlockchainEnum → chain name
+ *  `assetNetworkAdapter`        — chain name → BlockchainEnum (for bridge calls)
+ *  `reverseAssetNetworkAdapter` — BlockchainEnum → chain name (for display/lookup)
  *
  */
 

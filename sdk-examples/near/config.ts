@@ -19,6 +19,12 @@ import { signMessage } from 'near-api-js/nep413';
  *  Helpers for creating a NEAR account from a key pair and signing intent
  *  messages using NEP-413. Used when the signer is a NEAR wallet.
  *
+ *  NEP-413 is NEAR's off-chain message signing standard (similar to EIP-191
+ *  on Ethereum). The intents system uses it so users can authorize token
+ *  movements without submitting a transaction for every intent — the signed
+ *  message is verified on-chain by the `intents.near` contract when the
+ *  intent settles.
+ *
  *  The RPC provider connects to NEAR mainnet via FastNEAR for low-latency
  *  contract queries and transaction submission.
  *
@@ -36,7 +42,11 @@ export const nearJsonRpcProvider = new JsonRpcProvider({
 
 /**
  * Create a NEAR `Account` wrapper from a raw ed25519 private key.
- * The account ID is derived from the public key (hex-encoded).
+ *
+ * The account ID is the hex encoding of the public key's raw bytes — this is
+ * a NEAR "implicit account". Unlike named accounts (e.g. "alice.near"),
+ * implicit accounts exist automatically for any valid key pair and don't
+ * need to be created on-chain first.
  */
 export const getNearWalletFromKeyPair = (privateKey: string): Account => {
   const keyPair = KeyPair.fromString(privateKey as `ed25519:${string}`);
@@ -56,7 +66,8 @@ export const getIntentsSignerNear = () => {
   const signer = createIntentSignerNEP413({
     accountId: account.accountId,
     signMessage: async (nep413Payload) => {
-      // Convert the nonce to a Uint8Array (may come as array or base64 string)
+      // The SDK may provide the nonce as either a number[] or a base64 string
+      // depending on the transport layer; normalize to Uint8Array for NEP-413
       const nonceArray = Array.isArray(nep413Payload.nonce)
         ? new Uint8Array(nep413Payload.nonce)
         : new Uint8Array(Buffer.from(nep413Payload.nonce as string, 'base64'));
