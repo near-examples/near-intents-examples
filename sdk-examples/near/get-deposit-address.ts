@@ -92,7 +92,7 @@ const tokenId = 'nep141:wrap.near';
 
 async function main() {
   // Resolve the signer from environment variables (NEAR or EVM private key)
-  const { authIdentifier, authMethod } = getIntentsSignerNear();
+  const { authIdentifier, authMethod } = await getIntentsSignerNear();
 
   console.log('Fetching deposit address...');
 

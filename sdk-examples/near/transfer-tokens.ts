@@ -115,7 +115,7 @@ async function main() {
   const amountIn = parseUnits(amount, token.decimals).toString();
 
   // Resolve the signer from environment variables
-  const { signer } = getIntentsSignerNear();
+  const { signer } = await getIntentsSignerNear();
   if (!signer) {
     throw new Error('Signer not found');
   }

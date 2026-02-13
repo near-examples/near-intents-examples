@@ -55,7 +55,7 @@ export const getSwapQuote = async ({
   destinationAsset: Token;
   amountIn: string;
 }) => {
-  const { authIdentifier } = getIntentsSignerNear();
+  const { authIdentifier } = await getIntentsSignerNear();
 
   // Quote expires 20 minutes from now
   const deadline = new Date();
@@ -220,10 +220,11 @@ async function main() {
   }
 
   // Step 2: Sign and submit the swap intent
-  const { account, authIdentifier, authMethod } = getIntentsSignerNear();
+  const { account, authIdentifier, authMethod } = await getIntentsSignerNear();
+
   const intentTx = await submitSwap({
     quote,
-    account,
+    account: account.account,
     authIdentifier,
     authMethod,
   });

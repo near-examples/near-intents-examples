@@ -169,7 +169,7 @@ export const getTokenBalances = async ({
 
 const main = async () => {
   // Resolve the signer from environment variables (NEAR or EVM private key)
-  const { authIdentifier, authMethod } = getIntentsSignerNear();
+  const { authIdentifier, authMethod } = await getIntentsSignerNear();
   console.log('Fetching balances for intents user...');
   console.log(`Auth identifier: ${authIdentifier}`);
   console.log(`Auth method: ${authMethod}`);

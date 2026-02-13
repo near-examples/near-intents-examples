@@ -2,7 +2,7 @@ import {
   createIntentSignerNEP413,
   IntentsSDK,
 } from '@defuse-protocol/intents-sdk';
-import { AuthMethod } from '@defuse-protocol/internal-utils';
+import { authIdentity, AuthMethod } from '@defuse-protocol/internal-utils';
 import { base64 } from '@scure/base';
 import {
   Account,
@@ -40,6 +40,21 @@ export const nearJsonRpcProvider = new JsonRpcProvider({
   url: 'https://rpc.mainnet.fastnear.com',
 });
 
+export async function getAccountsForPublicKey(
+  publicKey: string,
+): Promise<string[]> {
+  const response = await fetch(
+    `https://api.fastnear.com/v0/public_key/${publicKey}/all`,
+  );
+  if (!response.ok) {
+    throw new Error(
+      `FastNEAR lookup failed: ${response.status} ${response.statusText}`,
+    );
+  }
+  const data = (await response.json()) as { account_ids: string[] };
+  return data.account_ids ?? [];
+}
+
 /**
  * Create a NEAR `Account` wrapper from a raw ed25519 private key.
  *
@@ -48,19 +63,30 @@ export const nearJsonRpcProvider = new JsonRpcProvider({
  * implicit accounts exist automatically for any valid key pair and don't
  * need to be created on-chain first.
  */
-export const getNearWalletFromKeyPair = (privateKey: string): Account => {
+export const getNearWalletFromKeyPair = async (
+  privateKey: string,
+): Promise<{
+  accountId: string;
+  account: Account;
+}> => {
   const keyPair = KeyPair.fromString(privateKey as `ed25519:${string}`);
   const signer = new KeyPairSigner(keyPair);
   const address = Buffer.from(keyPair.getPublicKey().data).toString('hex');
   const account = new Account(address, nearJsonRpcProvider as Provider, signer);
-  return account;
+  const accounts = await getAccountsForPublicKey(address);
+  const accountId = accounts.length > 0 ? accounts[0] : address;
+
+  return {
+    accountId: accountId,
+    account: account,
+  };
 };
 
 /**
  * Create an intents signer using a NEAR account via NEP-413 message signing.
  */
-export const getIntentsSignerNear = () => {
-  const account = getNearWalletFromKeyPair(
+export const getIntentsSignerNear = async () => {
+  const account = await getNearWalletFromKeyPair(
     process.env.INTENTS_SDK_PRIVATE_KEY_NEAR as string,
   );
   const signer = createIntentSignerNEP413({
@@ -74,7 +100,7 @@ export const getIntentsSignerNear = () => {
 
       // Sign the NEP-413 message using the NEAR account
       const signedData = await signMessage({
-        signerAccount: account,
+        signerAccount: account.account,
         payload: {
           nonce: nonceArray,
           message: nep413Payload.message,
@@ -94,7 +120,10 @@ export const getIntentsSignerNear = () => {
   });
 
   return {
-    authIdentifier: account.accountId,
+    authIdentifier: authIdentity.authHandleToIntentsUserId(
+      account.accountId,
+      AuthMethod.Near,
+    ),
     signer,
     authMethod: AuthMethod.Near,
     account: account,

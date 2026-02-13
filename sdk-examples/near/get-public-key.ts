@@ -1,8 +1,8 @@
+import 'dotenv/config';
 import { Account, KeyPair } from 'near-api-js';
 import { fileURLToPath } from 'node:url';
-import { queryContract } from './get-balances';
 import { getNearWalletFromKeyPair } from './config';
-
+import { queryContract } from './get-balances';
 /**
  *  Public Key Management for NEAR Intents
  *
@@ -99,9 +99,7 @@ export async function getAccountsForPublicKey(
  * Determine whether a NEAR account ID is "named" (e.g. "alice.near") or
  * "implicit" (64-character hex string derived from a public key).
  */
-export function getAccountType(
-  accountId: string,
-): 'named' | 'implicit' {
+export function getAccountType(accountId: string): 'named' | 'implicit' {
   // Implicit accounts are exactly 64 hex characters (32 bytes of a public key)
   return /^[0-9a-f]{64}$/.test(accountId) ? 'implicit' : 'named';
 }
@@ -113,7 +111,9 @@ export function getAccountType(
 async function main() {
   const privateKey = process.env.INTENTS_SDK_PRIVATE_KEY_NEAR;
   if (!privateKey) {
-    throw new Error('Missing INTENTS_SDK_PRIVATE_KEY_NEAR environment variable');
+    throw new Error(
+      'Missing INTENTS_SDK_PRIVATE_KEY_NEAR environment variable',
+    );
   }
 
   // 1. Derive key pair and extract the public key string (ed25519:...)
@@ -136,8 +136,7 @@ async function main() {
   }
 
   // If no accounts were found, use the implicit account
-  const accountId =
-    accounts.length > 0 ? accounts[0] : implicitAccountId;
+  const accountId = accounts.length > 0 ? accounts[0] : implicitAccountId;
   console.log(`\nUsing account: ${accountId}`);
 
   // 3. Check if the key is already registered with intents.near
@@ -154,8 +153,8 @@ async function main() {
 
   // 4. Register the key on-chain
   console.log('Registering public key with intents.near...');
-  const account = getNearWalletFromKeyPair(privateKey);
-  const result = await addPublicKeyToContract({ account, publicKey });
+  const account = await getNearWalletFromKeyPair(privateKey);
+  const result = await addPublicKeyToContract({ account: account.account, publicKey });
   console.log('Registration successful.');
   console.log('Transaction:', JSON.stringify(result, null, 2));
 }

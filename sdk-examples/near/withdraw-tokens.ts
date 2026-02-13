@@ -91,7 +91,7 @@ const withdrawalQuoteOnly = false; // Set to true to preview fees without execut
 
 async function main() {
   // Resolve the signer from environment variables
-  const { signer } = getIntentsSignerNear();
+  const { signer } = await getIntentsSignerNear();
   if (!signer) {
     throw new Error('Signer not found');
   }
