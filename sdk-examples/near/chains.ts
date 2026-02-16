@@ -158,10 +158,3 @@ export const reverseAssetNetworkAdapter: Record<
   [BlockchainEnum.ADI]: 'adi',
   [BlockchainEnum.STARKNET]: 'starknet',
 };
-
-/** Type guard to check if a string is a valid BlockchainEnum key. */
-export function isValidBlockchainEnumKey(
-  key: string,
-): key is keyof typeof reverseAssetNetworkAdapter {
-  return key in reverseAssetNetworkAdapter;
-}
