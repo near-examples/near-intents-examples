@@ -1,8 +1,7 @@
 import 'dotenv/config';
 import { Account, KeyPair } from 'near-api-js';
 import { fileURLToPath } from 'node:url';
-import { getNearWalletFromKeyPair } from './config';
-import { queryContract } from './get-balances';
+import { getNearWalletFromKeyPair, nearJsonRpcProvider } from './config';
 /**
  *  Public Key Management for NEAR Intents
  *
@@ -61,16 +60,16 @@ export async function hasPublicKey({
   accountId: string;
   publicKey: string;
 }): Promise<boolean> {
-  const data = await queryContract({
+  const response = await nearJsonRpcProvider.callFunction<boolean>({
     contractId: 'intents.near',
-    methodName: 'has_public_key',
+    method: 'has_public_key',
     args: {
       account_id: accountId,
       public_key: publicKey,
     },
   });
 
-  return data as boolean;
+  return response ?? false;
 }
 
 /**
@@ -154,7 +153,10 @@ async function main() {
   // 4. Register the key on-chain
   console.log('Registering public key with intents.near...');
   const account = await getNearWalletFromKeyPair(privateKey);
-  const result = await addPublicKeyToContract({ account: account.account, publicKey });
+  const result = await addPublicKeyToContract({
+    account: account.account,
+    publicKey,
+  });
   console.log('Registration successful.');
   console.log('Transaction:', JSON.stringify(result, null, 2));
 }

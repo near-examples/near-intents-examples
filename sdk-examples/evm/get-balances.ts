@@ -1,74 +1,8 @@
 import { authIdentity, AuthMethod } from '@defuse-protocol/internal-utils';
-import { BlockId, Finality } from 'near-api-js';
 import { fileURLToPath } from 'node:url';
 import { formatUnits } from 'viem';
-import { z } from 'zod';
-import { getTokens } from './get-tokens-list';
 import { getEvmIntentsSigner, nearJsonRpcProvider } from './config';
-
-/**
- *  Blockchain Utilities
- *
- *  Helpers for querying NEAR smart contracts via RPC view calls.
- *  Used by `get-balances.ts` to read token balances from the `intents.near`
- *  verifier contract without requiring a signer or gas.
- *
- */
-
-/**
- * Decode a NEAR RPC `call_function` response into a typed value using Zod.
- * The RPC returns the result as a byte array which is decoded to JSON.
- */
-export function decodeQueryResult<T>(
-  response: unknown,
-  schema: z.ZodType<T>,
-): T {
-  const parsed = z.object({ result: z.array(z.number()) }).parse(response);
-  const uint8Array = new Uint8Array(parsed.result);
-  const decoder = new TextDecoder();
-  const result = decoder.decode(uint8Array);
-  return schema.parse(JSON.parse(result));
-}
-
-/**
- * Optional block reference for historical or finalized reads.
- */
-export type OptionalBlockReference = {
-  blockId?: BlockId;
-  finality?: Finality;
-};
-
-/**
- * Query a NEAR contract view method and return the decoded result.
- *
- * View calls are free — they read state without modifying it, so they don't
- * require gas or a signer. This makes balance checks and other reads
- * zero-cost operations.
- *
- * Note for EVM users: balances live on the NEAR chain regardless of signer
- * type, so all balance queries go through the NEAR RPC.
- */
-export const queryContract = async ({
-  contractId,
-  methodName,
-  args,
-}: {
-  contractId: string;
-  methodName: string;
-  args: Record<string, unknown>;
-}): Promise<unknown> => {
-  // Make an RPC view call to the contract
-  const response = await nearJsonRpcProvider.query({
-    request_type: 'call_function',
-    account_id: contractId,
-    args_base64: btoa(JSON.stringify(args)),
-    method_name: methodName,
-    finality: 'final',
-  });
-
-  // Decode the byte-array response into a typed value
-  return decodeQueryResult(response, z.unknown());
-};
+import { getTokens } from './get-tokens-list';
 
 /**
  *  Get Token Balances
@@ -100,23 +34,17 @@ export const batchBalanceOf = async ({
   accountId: string;
   tokenIds: string[];
 }): Promise<bigint[]> => {
-  // Query the intents verifier contract for all token balances at once
-  const data = await queryContract({
+  const response = await nearJsonRpcProvider.callFunction<string[]>({
     contractId: 'intents.near',
-    methodName: 'mt_batch_balance_of',
+    method: 'mt_batch_balance_of',
     args: {
       account_id: accountId,
       token_ids: tokenIds,
     },
   });
 
-  // Parse the response: contract returns string amounts, convert to bigint
-  return z
-    .array(z.string())
-    .transform((arr) => arr.map(BigInt))
-    .parse(data);
+  return (response ?? []).map(BigInt);
 };
-
 /**
  * Resolve an intents account ID, fetch supported tokens, and return balances
  * with both raw and human-readable formats.

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {
   createIntentSignerNEP413,
   IntentsSDK,
@@ -55,6 +56,7 @@ export async function getAccountsForPublicKey(
   return data.account_ids ?? [];
 }
 
+
 /**
  * Create a NEAR `Account` wrapper from a raw ed25519 private key.
  *
@@ -73,7 +75,7 @@ export const getNearWalletFromKeyPair = async (
   const signer = new KeyPairSigner(keyPair);
   const address = Buffer.from(keyPair.getPublicKey().data).toString('hex');
   const account = new Account(address, nearJsonRpcProvider as Provider, signer);
-  const accounts = await getAccountsForPublicKey(address);
+  const accounts = await getAccountsForPublicKey(keyPair.getPublicKey().toString());
   const accountId = accounts.length > 0 ? accounts[0] : address;
 
   return {
