@@ -52,7 +52,7 @@ near-intents-examples/
 │   ├── near.ts                  # NEAR account setup
 │   └── utils.ts                 # Display helpers
 │
-├── sdk-examples/                    # Intents SDK examples (auto-detects NEAR or EVM signer)
+├── verifier-examples/                    # Intents SDK examples (auto-detects NEAR or EVM signer)
 │   ├── get-tokens-list.ts           # Fetch all supported tokens across chains
 │   ├── get-intents-account-id.ts    # Derive intents-internal account ID from wallet
 │   ├── get-balances.ts              # Read token balances from intents contract
