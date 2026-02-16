@@ -52,29 +52,23 @@ near-intents-examples/
 │   ├── near.ts                  # NEAR account setup
 │   └── utils.ts                 # Display helpers
 │
-├── sdk-examples/                # Intents SDK examples (split by signer type)
-│   ├── near/                    # NEAR wallet (NEP-413 signing) examples
-│   │   ├── config.ts            # NEAR SDK instance, RPC provider & signer setup
-│   │   ├── chains.ts            # Chain name ↔ BlockchainEnum mapping
-│   │   ├── get-tokens-list.ts   # Fetch supported tokens
-│   │   ├── get-internal-address.ts  # Derive intents-internal account ID
-│   │   ├── get-balances.ts      # Read token balances from intents contract
-│   │   ├── get-deposit-address.ts   # Get deposit address to fund intents account
-│   │   ├── get-public-key.ts    # Register public key with intents.near verifier
-│   │   ├── swap-tokens.ts       # Swap tokens inside intents system
-│   │   ├── transfer-tokens.ts   # Internal transfer between intents accounts
-│   │   └── withdraw-tokens.ts   # Withdraw tokens to external chain address
-│   │
-│   └── evm/                     # EVM wallet (ERC-191 signing) examples
-│       ├── config.ts            # EVM SDK instance, Viem wallet client & signer setup
-│       ├── chains.ts            # Chain name ↔ BlockchainEnum mapping
-│       ├── get-tokens-list.ts   # Fetch supported tokens
-│       ├── get-internal-address.ts  # Derive intents-internal account ID
-│       ├── get-balances.ts      # Read token balances from intents contract
-│       ├── get-deposit-address.ts   # Get deposit address to fund intents account
-│       ├── swap-tokens.ts       # Swap tokens inside intents system
-│       ├── transfer-tokens.ts   # Internal transfer between intents accounts
-│       └── withdraw-tokens.ts   # Withdraw tokens to external chain address
+├── sdk-examples/                    # Intents SDK examples (auto-detects NEAR or EVM signer)
+│   ├── get-tokens-list.ts           # Fetch all supported tokens across chains
+│   ├── get-intents-account-id.ts    # Derive intents-internal account ID from wallet
+│   ├── get-balances.ts              # Read token balances from intents contract
+│   ├── get-token-deposit-address.ts # Get deposit address to fund intents account
+│   ├── get-public-key-near.ts       # Check public key registration status (NEAR only)
+│   ├── add-public-key-near.ts       # Register public key with intents.near (NEAR only)
+│   ├── swap-tokens-near.ts          # Swap tokens with NEP-413 signing (NEAR)
+│   ├── swap-tokens-evm.ts           # Swap tokens with ERC-191 signing (EVM)
+│   ├── transfer-tokens.ts           # Internal transfer between intents accounts
+│   ├── withdraw-tokens.ts           # Withdraw tokens to external chain address
+│   └── utils/                       # Shared configuration and signer setup
+│       ├── config.ts                # SDK instance & RPC provider
+│       ├── signer.ts                # Auto-detect NEAR or EVM signer from .env
+│       ├── near-config.ts           # NEAR wallet & NEP-413 signer setup
+│       ├── evm-config.ts            # EVM wallet & ERC-191 signer setup
+│       └── chains.ts                # Chain name ↔ BlockchainEnum mapping
 │
 ├── .env.example                 # Environment variable template
 └── package.json
@@ -145,31 +139,30 @@ const amount = NEAR.toUnits('0.5').toString();                                  
 
 The Intents SDK gives full control over the intents system. Tokens are deposited into an intents account first, then swapped, transferred, or withdrawn programmatically.
 
-Examples are split into two folders by signer type — pick the one that matches your wallet:
+Most scripts auto-detect your signer type (NEAR or EVM) based on which private key is set in `.env`. Swap scripts are split by signer type since the signing logic differs.
 
-### NEAR Wallet Examples (NEP-413 signing)
-
-```bash
-pnpm sdk/near/get-tokens-list       # List all supported tokens
-pnpm sdk/near/get-internal-address  # Derive your intents-internal account ID
-pnpm sdk/near/get-balances          # Check token balances in your intents account
-pnpm sdk/near/get-deposit-address   # Get a deposit address to fund your intents account
-pnpm sdk/near/get-public-key        # Register public key with intents.near verifier
-pnpm sdk/near/swap-tokens           # Swap tokens inside the intents system
-pnpm sdk/near/transfer-tokens       # Internal transfer to another intents account
-pnpm sdk/near/withdraw-tokens       # Withdraw tokens to an external chain address
-```
-
-### EVM Wallet Examples (ERC-191 signing)
+### Running the Examples
 
 ```bash
-pnpm sdk/evm/get-tokens-list       # List all supported tokens
-pnpm sdk/evm/get-internal-address  # Derive your intents-internal account ID
-pnpm sdk/evm/get-balances          # Check token balances in your intents account
-pnpm sdk/evm/get-deposit-address   # Get a deposit address to fund your intents account
-pnpm sdk/evm/swap-tokens           # Swap tokens inside the intents system
-pnpm sdk/evm/transfer-tokens       # Internal transfer to another intents account
-pnpm sdk/evm/withdraw-tokens       # Withdraw tokens to an external chain address
+# Read-only (no wallet required)
+pnpm sdk/get-tokens-list             # List all supported tokens across chains
+
+# Account & Balances (auto-detects NEAR or EVM signer)
+pnpm sdk/get-intents-account-id      # Derive your intents-internal account ID
+pnpm sdk/get-balances                # Check token balances in your intents account
+pnpm sdk/get-token-deposit-address   # Get a deposit address to fund your intents account
+
+# Public Key Management (NEAR only)
+pnpm sdk/get-public-key-near         # Check if your key is registered with intents.near
+pnpm sdk/add-public-key-near         # Register your key (one-time, required before signing)
+
+# Swap Tokens (pick the one matching your wallet)
+pnpm sdk/swap-tokens-near            # Swap using NEAR wallet (NEP-413 signing)
+pnpm sdk/swap-tokens-evm             # Swap using EVM wallet (ERC-191 signing)
+
+# Move Tokens (auto-detects signer)
+pnpm sdk/transfer-tokens             # Internal transfer to another intents account
+pnpm sdk/withdraw-tokens             # Withdraw tokens to an external chain address
 ```
 
 ### Typical Workflow

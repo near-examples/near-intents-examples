@@ -1,13 +1,5 @@
 import { BlockchainEnum } from '@defuse-protocol/internal-utils';
 
-/**
- *  Chain Type Definitions
- *
- *  Type-safe chain name unions used across the SDK examples for
- *  deposit address lookups and chain mapping.
- *
- */
-
 export type SupportedChainName =
   | 'eth'
   | 'near'
@@ -60,19 +52,6 @@ export type SupportedBridge =
   | 'hot_omni'
   | 'near_omni';
 
-/**
- *  Chain Mapping
- *
- *  Two mapping directions exist because different APIs use different identifiers:
- *   - The token list API returns human-readable chain names (e.g. "arbitrum")
- *   - The POA bridge API expects `BlockchainEnum` values (e.g. BlockchainEnum.ARBITRUM)
- *
- *  `assetNetworkAdapter`        — chain name → BlockchainEnum (for bridge calls)
- *  `reverseAssetNetworkAdapter` — BlockchainEnum → chain name (for display/lookup)
- *
- */
-
-// Map human-readable chain names to BlockchainEnum values
 export const assetNetworkAdapter: Record<SupportedChainName, BlockchainEnum> = {
   near: BlockchainEnum.NEAR,
   eth: BlockchainEnum.ETHEREUM,
@@ -114,7 +93,6 @@ export const assetNetworkAdapter: Record<SupportedChainName, BlockchainEnum> = {
   starknet: BlockchainEnum.STARKNET,
 };
 
-// Reverse map: BlockchainEnum values to human-readable chain names
 export const reverseAssetNetworkAdapter: Record<
   BlockchainEnum,
   SupportedChainName
