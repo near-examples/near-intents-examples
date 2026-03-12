@@ -1,10 +1,11 @@
+import { fileURLToPath } from 'node:url';
 import {
-  OpenAPI,
   OneClickService,
+  OpenAPI,
   QuoteRequest,
 } from '@defuse-protocol/one-click-sdk-typescript';
-import { NEAR } from '@near-js/tokens';
 import 'dotenv/config';
+import { NEAR } from 'near-api-js/tokens';
 
 /**
  *  Step 2: Get Quote
@@ -114,7 +115,7 @@ export async function getQuote(
 }
 
 // Only run if this file is executed directly
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   getQuote(
     isTest,
     senderAddress,

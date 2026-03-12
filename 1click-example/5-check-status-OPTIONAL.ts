@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { OneClickService } from '@defuse-protocol/one-click-sdk-typescript';
 import { depositAddress } from './3-send-deposit';
 
@@ -53,6 +54,6 @@ export async function pollStatusUntilSuccess(depositAddress: string) {
 }
 
 // Only run if this file is executed directly
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   checkStatus(depositAddress);
 }

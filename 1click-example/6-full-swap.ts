@@ -1,11 +1,11 @@
 import { ApiError } from '@defuse-protocol/one-click-sdk-typescript';
+import 'dotenv/config';
+import { NEAR } from 'near-api-js/tokens';
 import { getQuote } from './2-get-quote';
 import { sendTokens } from './3-send-deposit';
 import { submitTxHash } from './4-submit-tx-hash-OPTIONAL';
 import { pollStatusUntilSuccess } from './5-check-status-OPTIONAL';
 import { displaySwapCostTable } from './utils';
-import { NEAR } from '@near-js/tokens';
-import 'dotenv/config';
 
 /**
  *  Step 5: Full Swap Implementation

@@ -1,6 +1,7 @@
-import { getAccount } from './near';
-import { NEAR } from '@near-js/tokens';
+import { fileURLToPath } from 'node:url';
 import 'dotenv/config';
+import { NEAR } from 'near-api-js/tokens';
+import { getAccount } from './near';
 
 /**
  *  Step 3: Send Deposit to Quote Address
@@ -44,7 +45,7 @@ export async function sendTokens(
 }
 
 // Only run if this file is executed directly
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   sendTokens(senderAccount, senderPrivateKey, depositAddress, depositAmount)
     .then((result) =>
       console.log(

@@ -1,9 +1,12 @@
 // Import NEAR-JS Libraries
 // See docs for more information: https://docs.near.org/tools/near-api
-import { KeyPairSigner } from '@near-js/signers';
-import { KeyPairString } from '@near-js/crypto';
-import { JsonRpcProvider, Provider } from '@near-js/providers';
-import { Account } from '@near-js/accounts';
+import {
+  Account,
+  JsonRpcProvider,
+  KeyPairSigner,
+  KeyPairString,
+  Provider,
+} from 'near-api-js';
 
 export async function getAccount(accountId: string, privateKey: string) {
   // Create signer from private key in .env file

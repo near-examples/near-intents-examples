@@ -1,167 +1,198 @@
-# NEAR Intents Cross-Chain Swap Examples
+# NEAR Intents Examples
 
-A comprehensive tutorial demonstrating cross-chain token swaps with [**NEAR Intents**](https://docs.near-intents.org) using [**1-Click API**](https://docs.near-intents.org/near-intents/integration/distribution-channels/1click-api). This project provides step-by-step examples for performing seamless token swaps between different blockchains.
+Example scripts demonstrating cross-chain token operations with [**NEAR Intents**](https://docs.near-intents.org). Two integration paths are covered:
 
-## 🚀 Features
-
-- **Cross-Chain Token Swaps**: Swap tokens between NEAR, Ethereum, Arbitrum, and other supported chains
-- **Step-by-Step Tutorial**: Each example focuses on a specific part of the swap process
-- **Complete Integration**: Full end-to-end swap implementation
-- **Real-Time Monitoring**: Track swap progress with status polling
+- **1-Click API** — simple REST-based flow for cross-chain swaps (no wallet SDK required)
+- **Intents SDK** — full programmatic access to deposits, swaps, transfers, and withdrawals inside the intents system
 
 ## Prerequisites
 
+- [Node.js >= 16](https://nodejs.org/en)
 - [pnpm >= 8](https://pnpm.io/)
-- [Node.js >=16](https://nodejs.org/en)
-- [TypeScript](https://www.typescriptlang.org/)
-- NEAR account with sufficient balance (~0.05 $NEAR)
-- 1-Click SDK JWT token -> [Request here](https://docs.google.com/forms/d/e/1FAIpQLSdrSrqSkKOMb_a8XhwF0f7N5xZ0Y5CYgyzxiAuoC2g4a2N68g/viewform) _(Optional)_
-  - _(Although a JWT is not required, not using one will incur 0.1% fee on all swaps)_
+- A NEAR account **or** an EVM wallet with a private key
+- _(Optional)_ 1-Click JWT token — [request here](https://partners.near-intents.org/sign-in)
+  - Without a JWT you will pay a 0.1% fee on all swaps
 
 ## Setup
 
-1. **Clone and Install**
+1. **Clone and install**
+
    ```bash
    git clone https://github.com/near-examples/near-intents-examples
    cd near-intents-examples
    pnpm install
    ```
 
-2. **Environment Setup**
+2. **Environment variables**
 
-   Create a `.env` file with your private credentials _(see [.env.example](.env.example))_:
+   Copy `.env.example` to `.env` and fill in your credentials:
 
    ```env
+   # 1-Click API examples (NEAR wallet only)
    SENDER_NEAR_ACCOUNT=your-account.near
-   SENDER_PRIVATE_KEY=your_near_private_key
-   ONE_CLICK_JWT=your_json_web_token
+   SENDER_PRIVATE_KEY=ed25519:5D9PZd2a...
+   ONE_CLICK_JWT=eyJhbGciOiJSUzI1N....
+
+   # SDK examples (NEAR or EVM — set one)
+   INTENTS_SDK_PRIVATE_KEY_NEAR=ed25519:5D9PZd2a...
+   INTENTS_SDK_PRIVATE_KEY_EVM=0x...
    ```
 
-3. **Configure Swap**
+## Project Structure
 
-    Swap quotes can be configured and executed independently in both [2-get-quote.ts](./1click-example/2-get-quote.ts) & [5-full-swap.ts](./1click-example/5-full-swap.ts):
-   
-    ```js
-    // Example Swap Configuration
-    const isTest = true;  // set to true for quote estimation / testing, false for actual execution
-    const senderAddress = process.env.SENDER_NEAR_ACCOUNT as string;  // Configure in .env
-    const recipientAddress = '0x553e771500f2d7529079918F93d86C0a845B540b';  // Token swap recipient address on Arbitrum
-    const originAsset = "nep141:wrap.near";  // Native $NEAR
-    const destinationAsset = "nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near";  // Native $ARB
-    const amount = "100000000000000000000000";  // 0.1 $NEAR
-    ```
+```
+near-intents-examples/
+├── 1click-example/              # REST-based 1-Click API examples
+│   ├── 1-get-tokens.ts          # Fetch supported tokens list
+│   ├── 2-get-quote.ts           # Get swap quote with deposit address
+│   ├── 3-send-deposit.ts        # Send tokens to deposit address
+│   ├── 4-submit-tx-hash-OPTIONAL.ts  # Submit tx hash for faster processing
+│   ├── 5-check-status-OPTIONAL.ts    # Poll swap status until completion
+│   ├── 6-full-swap.ts           # End-to-end swap (steps 2-5 combined)
+│   ├── near.ts                  # NEAR account setup
+│   └── utils.ts                 # Display helpers
+│
+├── verifier-examples/                    # Intents SDK examples (auto-detects NEAR or EVM signer)
+│   ├── get-tokens-list.ts           # Fetch all supported tokens across chains
+│   ├── get-intents-account-id.ts    # Derive intents-internal account ID from wallet
+│   ├── get-balances.ts              # Read token balances from intents contract
+│   ├── get-token-deposit-address.ts # Get deposit address to fund intents account
+│   ├── get-public-key-near.ts       # Check public key registration status (NEAR only)
+│   ├── add-public-key-near.ts       # Register public key with intents.near (NEAR only)
+│   ├── swap-tokens-near.ts          # Swap tokens with NEP-413 signing (NEAR)
+│   ├── swap-tokens-evm.ts           # Swap tokens with ERC-191 signing (EVM)
+│   ├── transfer-tokens.ts           # Internal transfer between intents accounts
+│   ├── withdraw-tokens.ts           # Withdraw tokens to external chain address
+│   └── utils/                       # Shared configuration and signer setup
+│       ├── config.ts                # SDK instance & RPC provider
+│       ├── signer.ts                # Auto-detect NEAR or EVM signer from .env
+│       ├── near-config.ts           # NEAR wallet & NEP-413 signer setup
+│       ├── evm-config.ts            # EVM wallet & ERC-191 signer setup
+│       └── chains.ts                # Chain name ↔ BlockchainEnum mapping
+│
+├── .env.example                 # Environment variable template
+└── package.json
+```
 
-## 🎯 Swap Flow
+## Dependencies
 
-1. **Quote Generation**: Get token swap pricing quote with a `depositAddress`
-2. **Token Deposit**: If you approve the quote, send agreed upon token amount to the `depositAddress`
-3. **Intent Execution**: 1Click executes swap on specified chain(s) w/ NEAR Intents
+| Package | Purpose |
+|---|---|
+| [`@defuse-protocol/one-click-sdk-typescript`](https://www.npmjs.com/package/@defuse-protocol/one-click-sdk-typescript) | 1-Click REST API client (quotes, status, token list) |
+| [`@defuse-protocol/intents-sdk`](https://www.npmjs.com/package/@defuse-protocol/intents-sdk) | Intents SDK for signing, submitting, and settling intents |
+| [`@defuse-protocol/internal-utils`](https://www.npmjs.com/package/@defuse-protocol/internal-utils) | Auth identity, message factories, POA bridge client |
+| [`near-api-js`](https://github.com/near/near-api-js) | NEAR blockchain interaction (RPC, accounts, NEP-413 signing) |
+| [`viem`](https://viem.sh) | EVM wallet client and ERC-191 message signing |
+| [`zod`](https://zod.dev) | Runtime response validation and type inference |
+| [`@scure/base`](https://github.com/nicolo-ribaudo/scure-base) | Base64 encoding/decoding for signatures and nonces |
+| [`dotenv`](https://github.com/motdotla/dotenv) | Environment variable loading |
 
-## 📚 Tutorial Steps
+---
 
-Open each file _before_ executing it using the guide below. Each file has detailed comments that further educates you
-about each step. Some files also have configuration options for you to alter and experiment with. 
+## 1-Click API Examples
 
-### Step 1: Get Available Tokens
+The 1-Click API is the simplest integration path. You request a quote, send tokens to a deposit address, and the system handles the cross-chain swap.
+
+### Swap Flow
+
+1. **Get quote** — receive pricing, fees, and a unique `depositAddress`
+2. **Send deposit** — transfer tokens to the `depositAddress` on the origin chain
+3. **Intent execution** — 1-Click handles the swap via NEAR Intents
+4. _(Optional)_ Submit the tx hash for faster detection
+5. _(Optional)_ Poll status until `SUCCESS` or `REFUNDED`
+
+### Running the Examples
 
 ```bash
-pnpm getTokens
+pnpm 1click/get-tokens        # List supported tokens (no auth required)
+pnpm 1click/get-quote          # Get a swap quote
+pnpm 1click/send-deposit       # Send deposit to quote address
+pnpm 1click/submit-tx-hash     # Submit tx hash (optional, speeds up processing)
+pnpm 1click/check-status       # Poll swap status (optional)
+pnpm 1click/full-swap           # Full end-to-end swap (steps 2-5 combined)
 ```
-Runs logic found in [1-get-tokens.ts](./1click-example/1-get-tokens.ts):
-- Fetches all supported tokens across different blockchains
-- No authentication required
-- Displays tokens organized by blockchain
-- Use `assetId` for swap quote configuration
 
-### Step 2: Get Quote
+### Configuring a Swap
+
+Edit the configuration variables at the top of [`2-get-quote.ts`](./1click-example/2-get-quote.ts) or [`6-full-swap.ts`](./1click-example/6-full-swap.ts):
+
+```ts
+const isTest = true;           // true = dry run (no deposit address), false = real execution
+const originAsset = 'nep141:wrap.near';                                           // Source token
+const destinationAsset = 'nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near'; // Target token
+const amount = NEAR.toUnits('0.5').toString();                                    // Amount in smallest unit
+```
+
+### Status Codes
+
+| Status | Description |
+|---|---|
+| `PENDING_DEPOSIT` | Waiting for deposit confirmation |
+| `KNOWN_DEPOSIT_TX` | Deposit transaction detected |
+| `PROCESSING` | Swap being executed |
+| `SUCCESS` | Swap completed |
+| `REFUNDED` | Swap failed, tokens refunded |
+
+---
+
+## SDK Examples
+
+The Intents SDK gives full control over the intents system. Tokens are deposited into an intents account first, then swapped, transferred, or withdrawn programmatically.
+
+Most scripts auto-detect your signer type (NEAR or EVM) based on which private key is set in `.env`. Swap scripts are split by signer type since the signing logic differs.
+
+### Running the Examples
 
 ```bash
-pnpm getQuote
-```
-Runs logic found in [2-get-quote.ts](./1click-example/2-get-quote.ts):
-- Retrieves swap quotes with pricing and fees
-- Generates unique deposit addresses
-- Calculates expected output amounts
+# Read-only (no wallet required)
+pnpm sdk/get-tokens-list             # List all supported tokens across chains
 
-### Step 3: Send Deposit
+# Account & Balances (auto-detects NEAR or EVM signer)
+pnpm sdk/get-intents-account-id      # Derive your intents-internal account ID
+pnpm sdk/get-balances                # Check token balances in your intents account
+pnpm sdk/get-token-deposit-address   # Get a deposit address to fund your intents account
 
-```bash
-pnpm sendDeposit
-```
-Runs logic found in [3-send-deposit.ts](./1click-example/3-send-deposit.ts):
-- Sends $NEAR tokens to the generated deposit address
-- Initiates the cross-chain swap process
-- Returns transaction hash for tracking
+# Public Key Management (NEAR only)
+pnpm sdk/get-public-key-near         # Check if your key is registered with intents.near
+pnpm sdk/add-public-key-near         # Register your key (one-time, required before signing)
 
-### Step 4: Check Status
+# Swap Tokens (pick the one matching your wallet)
+pnpm sdk/swap-tokens-near            # Swap using NEAR wallet (NEP-413 signing)
+pnpm sdk/swap-tokens-evm             # Swap using EVM wallet (ERC-191 signing)
 
-```bash
-pnpm checkStatus
-```
-Runs logic found in [4-check-status.ts](./1click-example/4-check-status.ts):
-- Monitors swap execution status
-- Tracks progress through different stages
-- Shows completion confirmation
-
-### Step 5: Full Swap (Complete Flow)
-
-```bash
-pnpm fullSwap
-```
-Runs logic found in [5-full-swap.ts](./1click-example/5-full-swap.ts):
-- Combines steps 2-4 into one seamless process
-- Automatic status monitoring until completion
-- _(NOTE: Configure swap options in `5-full-swap.ts` independently of other files)_
-
-
-## 🏗️ Project Structure
-
-```
-1click-example/
-├── 1-get-tokens.ts      # Fetch supported networks and tokens
-├── 2-get-quote.ts       # Get swap quotes
-├── 3-send-deposit.ts    # Send deposit transaction
-├── 4-check.status.ts    # Monitor swap status
-├── 5-full-swap.ts       # Execute complete swap flow
-├── near.ts              # NEAR account utilities
-└── utils.ts             # Helper functions for formatting `getTokens` response
+# Move Tokens (auto-detects signer)
+pnpm sdk/transfer-tokens             # Internal transfer to another intents account
+pnpm sdk/withdraw-tokens             # Withdraw tokens to an external chain address
 ```
 
-## 🔗 Dependencies
+### Typical Workflow
 
-- **[@defuse-protocol/one-click-sdk-typescript](https://www.npmjs.com/package/@defuse-protocol/one-click-sdk-typescript)**: Official 1-Click SDK
-- **[@near-js/*](https://github.com/near/near-api-js)**: NEAR blockchain interaction
-- **dotenv**: Environment variable management
-- **TypeScript**: Type-safe development
+1. **Get your internal address** — derive the intents account ID from your NEAR or EVM credentials
+2. **Get a deposit address** — request a chain-specific address to fund your intents account
+3. **Deposit tokens** — send tokens from your external wallet to the deposit address
+4. **Check balances** — verify tokens arrived in your intents account
+5. **Swap / Transfer / Withdraw** — perform operations inside the system
 
+---
 
-## 🔍 Status Monitoring
+## Learn More
 
-The system tracks swaps through these stages:
-- `PENDING_DEPOSIT`: Waiting for deposit confirmation
-- `KNOWN_DEPOSIT_TX`: Deposit transaction detected
-- `PROCESSING`: Swap being executed
-- `SUCCESS`: Swap completed successfully
-- `REFUNDED`: Swap failed, tokens refunded
-
-## 📖 Learn More
-
-- [1-Click API Docs](https://docs.near-intents.org/near-intents/integration/distribution-channels/1click-api)
-- [1-Click TypeScript SDK Repo](https://github.com/defuse-protocol/one-click-sdk-typescript)
+- [NEAR Intents Docs](https://docs.near-intents.org)
+- [1-Click API Reference](https://docs.near-intents.org/near-intents/integration/distribution-channels/1click-api)
+- [1-Click TypeScript SDK](https://github.com/defuse-protocol/one-click-sdk-typescript)
 - [NEAR Intents Explorer](https://explorer.near-intents.org)
-- [NEAR Protocol Documentation](https://docs.near.org)
+- [NEAR Protocol Docs](https://docs.near.org)
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are welcome! Please feel free to submit issues and enhancement requests.
-
-Before submitting a PR, make sure your code passes linting:
+Contributions are welcome. Before submitting a PR, make sure your code passes linting:
 
 ```bash
 pnpm lint        # check for issues
 pnpm lint:fix    # auto-fix issues
+pnpm format      # format with Prettier
 ```
 
-## 📄 License
+## License
 
-This project is provided as educational examples for the 1-Click SDK and NEAR Intents ecosystem.
+This project is provided as educational examples for the NEAR Intents ecosystem.
