@@ -19,7 +19,7 @@ import { NEAR } from 'near-api-js/tokens';
 // Example Swap Configuration
 const isTest = true; // set to true for quote estimation / testing, false for actual execution
 const senderAddress = process.env.SENDER_NEAR_ACCOUNT as string; // Configure in .env
-const recipientAddress = '0x553e771500f2d7529079918F93d86C0a845B540b'; // Token swap recipient address on Arbitrum
+const recipientAddress = process.env.SWAP_RECIPIENT ?? ''; // Token swap recipient address on Arbitrum
 const originAsset = 'nep141:wrap.near'; // Native $NEAR
 const destinationAsset =
   'nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near'; // Native $ARB
@@ -42,6 +42,8 @@ export async function getQuote(
   amount: string,
 ) {
   try {
+    if (!senderAddress || !recipientAddress)
+      throw new Error('Set SENDER_NEAR_ACCOUNT and SWAP_RECIPIENT');
     const quoteRequest: QuoteRequest = {
       // Testing Mode : set to true for quote estimation / testing, false for actual execution
       // When true, the response will NOT CONTAIN the following fields:

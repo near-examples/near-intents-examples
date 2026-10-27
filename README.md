@@ -7,7 +7,7 @@ Example scripts demonstrating cross-chain token operations with [**NEAR Intents*
 
 ## Prerequisites
 
-- [Node.js >= 16](https://nodejs.org/en)
+- [Node.js >= 22.22.2](https://nodejs.org/en)
 - [pnpm >= 8](https://pnpm.io/)
 - A NEAR account **or** an EVM wallet with a private key
 - _(Optional)_ 1-Click JWT token — [request here](https://partners.near-intents.org/sign-in)
@@ -114,10 +114,12 @@ pnpm 1click/full-swap           # Full end-to-end swap (steps 2-5 combined)
 
 ### Configuring a Swap
 
+Set `SWAP_RECIPIENT` to your destination address in `.env`. The full-swap example defaults to a dry-run quote; set `SWAP_EXECUTE=true` and configure `SENDER_PRIVATE_KEY` only when ready to fund the swap. `SWAP_AMOUNT` is a decimal amount of NEAR (default `0.01`). The standalone deposit script requires `DEPOSIT_ADDRESS` from your own live quote and `SWAP_EXECUTE=true`.
+
 Edit the configuration variables at the top of [`2-get-quote.ts`](./1click-example/2-get-quote.ts) or [`6-full-swap.ts`](./1click-example/6-full-swap.ts):
 
 ```ts
-const isTest = true;           // true = dry run (no deposit address), false = real execution
+const isTest = true; // standalone quote example; full-swap uses SWAP_EXECUTE           // true = dry run (no deposit address), false = real execution
 const originAsset = 'nep141:wrap.near';                                           // Source token
 const destinationAsset = 'nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near'; // Target token
 const amount = NEAR.toUnits('0.5').toString();                                    // Amount in smallest unit
@@ -196,3 +198,7 @@ pnpm format      # format with Prettier
 ## License
 
 This project is provided as educational examples for the NEAR Intents ecosystem.
+
+## Local checks
+
+Run `pnpm check`, `pnpm lint` and `pnpm test` without sending transactions. Tests use mocked services to verify dry-run behavior and configuration validation.
