@@ -20,8 +20,7 @@ import { getAccount } from './near';
 const senderAccount = process.env.SENDER_NEAR_ACCOUNT as string;
 const senderPrivateKey = process.env.SENDER_PRIVATE_KEY as string;
 const depositAmount = NEAR.toUnits('0.001').toString();
-export const depositAddress =
-  '84e2dc2b3a7d866c6e8fead3dfd296bc9e6abcf8eeec295e8c29b099bf21fbc7'; // deposit address from getQuote
+export const depositAddress = process.env.DEPOSIT_ADDRESS ?? ''; // deposit address from your live quote
 
 export async function sendTokens(
   senderAccount: string,
@@ -30,6 +29,10 @@ export async function sendTokens(
   depositAmount: string,
 ) {
   try {
+    if (!senderAccount || !senderPrivateKey || !depositAddress)
+      throw new Error(
+        'Set sender credentials and DEPOSIT_ADDRESS from your quote',
+      );
     const account = await getAccount(senderAccount, senderPrivateKey);
     const result = await account.transfer({
       token: NEAR,
@@ -46,6 +49,8 @@ export async function sendTokens(
 
 // Only run if this file is executed directly
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  if (process.env.SWAP_EXECUTE !== 'true')
+    throw new Error('Set SWAP_EXECUTE=true to send a deposit');
   sendTokens(senderAccount, senderPrivateKey, depositAddress, depositAmount)
     .then((result) =>
       console.log(

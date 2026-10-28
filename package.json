@@ -7,8 +7,8 @@
     "1click/get-tokens": "tsx 1click-example/1-get-tokens.ts",
     "1click/get-quote": "tsx 1click-example/2-get-quote.ts",
     "1click/send-deposit": "tsx 1click-example/3-send-deposit.ts",
-    "1click/submit-tx-hash": "tsx 1click-example/4-submit-tx-hash.ts",
-    "1click/check-status": "tsx 1click-example/5-check-status.ts",
+    "1click/submit-tx-hash": "tsx 1click-example/4-submit-tx-hash-OPTIONAL.ts",
+    "1click/check-status": "tsx 1click-example/5-check-status-OPTIONAL.ts",
     "1click/full-swap": "tsx 1click-example/6-full-swap.ts",
     "sdk/get-tokens-list": "tsx verifier-examples/get-tokens-list.ts",
     "sdk/get-balances": "tsx verifier-examples/get-balances.ts",
@@ -22,16 +22,18 @@
     "sdk/add-public-key-near": "tsx verifier-examples/add-public-key-near.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "format": "prettier --write '**/*.{ts,json,md}'"
+    "format": "prettier --write '**/*.{ts,json,md}'",
+    "check": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
-    "@defuse-protocol/intents-sdk": "^0.48.0",
+    "@defuse-protocol/intents-sdk": "^0.93.0",
     "@defuse-protocol/internal-utils": "^0.25.0",
-    "@defuse-protocol/one-click-sdk-typescript": "0.1.15",
+    "@defuse-protocol/one-click-sdk-typescript": "0.1.26",
     "@scure/base": "^2.0.0",
     "@thames/monads": "^0.7.0",
     "dotenv": "^17.2.1",
-    "near-api-js": "^7.0.4",
+    "near-api-js": "^7.4.0",
     "viem": "^2.45.1",
     "zod": "^4.3.6"
   },
@@ -48,5 +50,8 @@
     "tsx": "^4.21.0",
     "typescript": "^5.4.2",
     "typescript-eslint": "^8.54.0"
+  },
+  "engines": {
+    "node": ">=22.22.2"
   }
 }

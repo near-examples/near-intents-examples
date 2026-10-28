@@ -1,6 +1,7 @@
+import { fileURLToPath } from 'node:url';
 import { ApiError } from '@defuse-protocol/one-click-sdk-typescript';
 import 'dotenv/config';
-import { NEAR } from 'near-api-js/tokens';
+import { readSwapConfig } from './swap-config';
 import { getQuote } from './2-get-quote';
 import { sendTokens } from './3-send-deposit';
 import { submitTxHash } from './4-submit-tx-hash-OPTIONAL';
@@ -19,31 +20,44 @@ import { displaySwapCostTable } from './utils';
  *  NOTE: Configure this file independently of the other files in this directory
  */
 
-// Example Swap Configuration
-const isTest = false; // keep set to false for actual execution
-const senderAddress = process.env.SENDER_NEAR_ACCOUNT as string;
-const senderPrivateKey = process.env.SENDER_PRIVATE_KEY as string;
-const recipientAddress = '0x553e771500f2d7529079918F93d86C0a845B540b'; // Token swap recipient address on Arbitrum
-const originAsset = 'nep141:wrap.near'; // Native $NEAR
-const destinationAsset =
-  'nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near'; // Native $ARB
-const amount = NEAR.toUnits('0.01').toString(); // amount in smallest unit of the input or output token depending on `swapType`
+const defaultServices = {
+  getQuote,
+  sendTokens,
+  submitTxHash,
+  pollStatusUntilSuccess,
+};
 
-async function fullSwap() {
+export async function fullSwap(
+  env: NodeJS.ProcessEnv = process.env,
+  services = defaultServices,
+) {
+  const { execute, senderAddress, senderPrivateKey, recipientAddress, amount } =
+    readSwapConfig(env);
+  const originAsset = 'nep141:wrap.near';
+  const destinationAsset =
+    'nep141:arb-0x912ce59144191c1204e64559fe8253a0e49e6548.omft.near';
   try {
     console.log('Starting NEAR Intents full swap process w/ 1-Click API...\n');
 
     // Step 1: Get quote and extract deposit address
     console.log('Step 1: Getting quote...');
     console.log('--------------------------------');
-    const quote = await getQuote(
-      isTest,
+    const quote = await services.getQuote(
+      !execute,
       senderAddress,
       recipientAddress,
       originAsset,
       destinationAsset,
       amount,
     );
+
+    displaySwapCostTable(quote);
+    if (!execute) {
+      console.log(
+        'Dry-run quote only. Set SWAP_EXECUTE=true to send the deposit.',
+      );
+      return { quote };
+    }
 
     // Extract deposit address from quote response
     const depositAddress = quote.quote?.depositAddress;
@@ -56,13 +70,10 @@ async function fullSwap() {
     );
     console.log(`🎯 - Deposit address: ${depositAddress}`);
 
-    // Display swap cost breakdown table
-    displaySwapCostTable(quote);
-
     // Step 2: Send deposit
     console.log('Step 2: Sending deposit...');
     console.log('--------------------------------');
-    const depositResult = await sendTokens(
+    const depositResult = await services.sendTokens(
       senderAddress,
       senderPrivateKey,
       depositAddress,
@@ -76,7 +87,7 @@ async function fullSwap() {
     // Step 3: Submit transaction hash
     console.log('Step 3: Submitting transaction hash...');
     console.log('--------------------------------');
-    const submitResult = await submitTxHash(
+    const submitResult = await services.submitTxHash(
       depositResult.transaction.hash,
       depositAddress,
     );
@@ -88,9 +99,9 @@ async function fullSwap() {
     console.log('⏳ Waiting 5 seconds before starting status checks...');
     await new Promise((resolve) => setTimeout(resolve, 5000));
 
-    const finalStatus = await pollStatusUntilSuccess(depositAddress);
+    const finalStatus = await services.pollStatusUntilSuccess(depositAddress);
     console.log('--------------------------------');
-    console.log('✅ Full swap process completed! \n\n');
+    console.log(`Swap finished with status: ${finalStatus.status}\n`);
     console.log(
       `🔍 View full transaction on NEAR Intents Explorer: \n https://explorer.near-intents.org/transactions/${depositAddress} \n`,
     );
@@ -102,4 +113,9 @@ async function fullSwap() {
   }
 }
 
-fullSwap().catch(console.error);
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  fullSwap().catch((error) => {
+    console.error(error);
+    process.exitCode = 1;
+  });
+}
